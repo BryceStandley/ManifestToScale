@@ -1,8 +1,19 @@
+using Microsoft.AspNetCore.Http.Features;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddControllers();
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; // 100MB
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+});
+
+builder.Services.AddLogging();
 
 var app = builder.Build();
 
@@ -10,32 +21,73 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseDeveloperExceptionPage();
+    // app.UseSwagger();
+    // app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.UseRouting();
 
-app.MapGet("/weatherforecast", () =>
+app.MapControllers();
+
+/*
+app.MapGet("/ftgManifestUpload", () =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    string basePath =  "C:\\dev\\test";
+    string inputFile = "input\\ftgManifest.pdf";
+    string outputFile = "output\\ftgManifest01.pdf";
+    string outputExcelFile = "output\\ftgManifest01.xlsx";
+    
+    PdfProcessor.SimplifyPdf(Path.Join(basePath, inputFile), Path.Join(basePath, outputFile));
+
+    var manifest = PdfProcessor.ConvertPdfToExcel(Path.Join(basePath, outputFile), Path.Join(basePath, outputExcelFile));
+
+    if (manifest != null)
+    {
+        ManifestToScale.ConvertManifestToCsv(manifest, Path.Join(basePath, Path.ChangeExtension(outputFile, ".csv")));
+        
+        ManifestToScale.GenerateReceiptFromTemplate(manifest, Path.Join(basePath, Path.ChangeExtension(outputFile, ".rcxml")));
+        
+        ManifestToScale.GenerateShipmentFromTemplate(manifest, Path.Join(basePath, Path.ChangeExtension(outputFile, ".shxml")));
+    }
+    
+    return Results.Ok("FTG Manifest Upload Endpoint");
+}).WithName("FTGManifestUpload");
+
+app.MapPost("/ftgManifestUpload", (IFormFile file) =>
+{
+    string basePath = "C:\\dev\\test";
+    Guid guid = Guid.NewGuid();
+    string fileName = guid + "_ftgManifest";
+    string inputFolder = "upload";
+    string outputFile = "output";
+
+    if (file.Length > 0)
+    {
+        using (var stream = new FileStream(Path.Join(basePath, inputFolder, fileName + ".pdf"), FileMode.Create))
+        {
+            file.CopyTo(stream);
+        }
+        
+        PdfProcessor.SimplifyPdf(Path.Join(basePath, inputFolder,fileName + ".pdf"), Path.Join(basePath, outputFile, fileName + "_simplified.pdf"));
+
+        var manifest = PdfProcessor.ConvertPdfToExcel(Path.Join(basePath, outputFile, fileName + "_simplified.pdf"), Path.Join(basePath, outputFile, fileName + ".xlsx"));
+
+        if (manifest == null) return Results.Ok("FTG Manifest Uploaded Successfully");
+        
+        ManifestToScale.ConvertManifestToCsv(manifest, Path.Join(basePath, outputFile, fileName + ".csv"));
+            
+        ManifestToScale.GenerateReceiptFromTemplate(manifest, Path.Join(basePath, outputFile, fileName + ".rcxml"));
+            
+        ManifestToScale.GenerateShipmentFromTemplate(manifest, Path.Join(basePath, outputFile, fileName + ".shxml"));
+
+        return Results.Ok("FTG Manifest Uploaded Successfully");
+    }
+
+    return Results.BadRequest("No file uploaded");
+}).WithName("FTGManifestUploadPost").DisableAntiforgery();
+*/
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

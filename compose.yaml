@@ -1,0 +1,7 @@
+﻿services:
+  ftg_pdf_api:
+    image: ftg_pdf_api
+    build:
+      context: .
+      dockerfile: Dockerfile
+
