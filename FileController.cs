@@ -76,6 +76,7 @@ public class FileController(
                 fileName = fileName,
                 filePath = filePath,
                 fileSize = file.Length,
+                manifestDate = xmlResults.ManifestDate,
                 receiptXmlContent = receiptXmlContent,
                 shipmentXmlContent = shipmentXmlContent
             });
@@ -91,6 +92,7 @@ public class FileController(
     {
         public string ReceiptXml { get; set; } = string.Empty;
         public string ShipmentXml { get; set; } = string.Empty;
+        public DateOnly ManifestDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
     }
     
     private XmlExportResults ExportXmlFiles(string filePath, string fileName)
@@ -123,6 +125,7 @@ public class FileController(
         var xml = new XmlExportResults();
         xml.ReceiptXml = receiptXmlPath;
         xml.ShipmentXml = shipmentXmlPath;
+        xml.ManifestDate = manifest.GetManifestDate();
 
         return xml;
     }
