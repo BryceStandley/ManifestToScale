@@ -122,10 +122,13 @@ public class FileController(
         var shipmentXmlPath = outputFile + ".shxml";
         ManifestToScale.GenerateShipmentFromTemplate(manifest, shipmentXmlPath);
 
+        var reordered = manifest.GetManifestDate().ToString("yyyy-dd-MM");
+        DateOnly result = DateOnly.ParseExact(reordered, "yyyy-dd-MM");
+
         var xml = new XmlExportResults();
         xml.ReceiptXml = receiptXmlPath;
         xml.ShipmentXml = shipmentXmlPath;
-        xml.ManifestDate = DateOnly.Parse(manifest.GetManifestDate().ToString("yyyy-dd-MM"));
+        xml.ManifestDate = result;
 
         return xml;
     }
