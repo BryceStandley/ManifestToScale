@@ -125,7 +125,7 @@ public class FileController(
         var xml = new XmlExportResults();
         xml.ReceiptXml = receiptXmlPath;
         xml.ShipmentXml = shipmentXmlPath;
-        xml.ManifestDate = manifest.GetManifestDate();
+        xml.ManifestDate = DateOnly.Parse(manifest.GetManifestDate().ToString("yyyy-dd-MM"));
 
         return xml;
     }

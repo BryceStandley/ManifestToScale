@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace FTG_PDF_API;
 
 
@@ -33,7 +35,7 @@ public class FreshToGoOrder
         string[] parts = orderLineFromPdf.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
         
         
-        OrderDate = DateOnly.Parse(parts[0]);
+        OrderDate = DateOnly.ParseExact(parts[0], "dd/MM/yyyy", CultureInfo.InvariantCulture);
         StoreNumber = parts[1];
         
         StoreName = string.Join(" ", parts[2..^6]); // Join all parts except the last 6 which are details

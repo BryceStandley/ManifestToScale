@@ -245,12 +245,12 @@ public class ManifestToScale
                         new XElement(_namespace + "Warehouse", "PER"),
 
                         // UserDef fields
-                        new XElement(_namespace + "UserDef1", data.Qty),
-                        new XElement(_namespace + "UserDef2", data.CustomerNumber),
-                        new XElement(_namespace + "UserDef7", "0"),
-                        new XElement(_namespace + "UserDef8", "0"),
-                        new XElement(_namespace + "UserDef9", "0"),
-                        new XElement(_namespace + "UserDef10", "0"),
+                        //new XElement(_namespace + "UserDef1", data.Qty),
+                        //new XElement(_namespace + "UserDef2", data.CustomerNumber),
+                        //new XElement(_namespace + "UserDef7", "0"),
+                        //new XElement(_namespace + "UserDef8", "0"),
+                        //new XElement(_namespace + "UserDef9", "0"),
+                        //new XElement(_namespace + "UserDef10", "0"),
 
                         // Details section
                         new XElement(_namespace + "Details",
