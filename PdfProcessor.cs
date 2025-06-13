@@ -84,12 +84,12 @@ public class PdfProcessor
             return null;
         }
         
-        //File.WriteAllText(System.IO.Path.ChangeExtension(outputPath, "txt"), extractedText);
+        File.WriteAllText(System.IO.Path.ChangeExtension(outputPath, "txt"), extractedText);
         
         string cleanedText = CleanExtractedText(extractedText);
         
         var cleanedOutputPath = System.IO.Path.ChangeExtension(outputPath, "_cleaned.txt");
-        //File.WriteAllText(cleanedOutputPath, cleanedText);
+        File.WriteAllText(cleanedOutputPath, cleanedText);
 
         FreshToGoManifest manifest = new FreshToGoManifest(CreateOrdersFromText(cleanedText));
 
@@ -108,6 +108,8 @@ public class PdfProcessor
         
         for(int i = 0; i < lines.Length; i++)
         {
+            //Temp Debug
+            console.WriteLine(lines[i]);
             // Skip header line
             if (lines[i].StartsWith("ShipDate StoreNum StoreName PO# Cust# Order# Inv# Qty Crates"))
                 continue;
