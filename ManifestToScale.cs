@@ -1,12 +1,13 @@
 using System.Globalization;
 using System.Xml.Linq;
 using CsvHelper;
+using FTG_PDF_API.Logging;
 
 namespace FTG_PDF_API;
 
 public class ManifestToScale
 {
-    public static void ConvertManifestToCsv(FreshToGoManifest manifest, string outputFile)
+    public static bool ConvertManifestToCsv(FreshToGoManifest manifest, string outputFile)
     {
         try
         {
@@ -17,16 +18,18 @@ public class ManifestToScale
                 writer.Flush();
             }
 
-            Console.WriteLine("CSV file written successfully to: " + outputFile);
+            GlobalLogger.LogInfo("CSV file written successfully to: " + outputFile);
+            return true;
         }
         catch (Exception e)
         {
-            Console.WriteLine("Error writing to CSV file: " + e.Message);
+            GlobalLogger.LogError("Error writing to CSV file: " + e.Message);
+            return false;
         }
 
     }
 
-    public static void GenerateReceiptFromTemplate(FreshToGoManifest manifest, string outputFile)
+    public static bool GenerateReceiptFromTemplate(FreshToGoManifest manifest, string outputFile)
     {
         try
         {
@@ -34,28 +37,31 @@ public class ManifestToScale
             
             var doc = ReceiptXmlBuilder.BuildReceiptXml(details);
             doc.Save(outputFile);
-            Console.WriteLine("Receipt generated successfully: " + outputFile);
+            GlobalLogger.LogInfo("Receipt generated successfully: " + outputFile);
+            return true;
             
         }
         catch (Exception e)
         {
-            Console.WriteLine("Error generating receipt from template: " + e.Message);
+            GlobalLogger.LogError("Error generating receipt from template: " + e.Message);
+            return false;
         }
     }
     
-    public static void GenerateShipmentFromTemplate(FreshToGoManifest manifest, string outputFile)
+    public static bool GenerateShipmentFromTemplate(FreshToGoManifest manifest, string outputFile)
     {
         try
         {
             
             var shipmentDoc = ShipmentXmlBuilder.BuildShipmentXml(GenerateShipmentDetails(manifest));
             shipmentDoc.Save(outputFile);
-            
-            Console.WriteLine("Shipments generated successfully: " + outputFile);
+            GlobalLogger.LogInfo("Shipment generated successfully: " + outputFile);
+            return true;
         }
         catch (Exception e)
         {
-            Console.WriteLine("Error generating shipments from template: " + e.Message);
+            GlobalLogger.LogError("Error generating shipment from template: " + e.Message);
+            return false;
         }
     }
 

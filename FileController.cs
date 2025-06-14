@@ -1,3 +1,6 @@
+using FTG_PDF_API.Logging;
+using Microsoft.AspNetCore.StaticFiles;
+
 namespace FTG_PDF_API;
 
 using Microsoft.AspNetCore.Mvc;
@@ -12,90 +15,145 @@ public class FileController(
     ILogger<FileController> logger)
     : ControllerBase
 {
+    private readonly string _fileUploadPath = Path.Combine(environment.ContentRootPath, "uploads");
+    private readonly string _fileStoragePath = Path.Combine(environment.ContentRootPath, "output");
+
+    
     [HttpPost("upload")]
-    public async Task<IActionResult> UploadFile(IFormFile file)
+    public async Task<IActionResult> UploadFile(IFormFile? file)
     {
         try
         {
-            if (!IsAuthenticated())
+            
+            if (!environment.IsDevelopment() && !IsAuthenticated())
             {
-                return Unauthorized("Invalid authentication key");
+                GlobalLogger.LogWarning("Unauthorized access attempt");
+                return Unauthorized(new {
+                    message = "Invalid authentication key",
+                    exception = "Unauthorized access"
+                });
             }
             
             if (file == null || file.Length == 0)
             {
-                return BadRequest("No file uploaded");
+                GlobalLogger.LogError("No file uploaded");
+                return BadRequest(new {
+                    message = "No file uploaded",
+                    exception = "File is null or empty"
+                });
             }
-
-            // Create uploads directory if it doesn't exist
-            var uploadsPath = Path.Combine(environment.ContentRootPath, "uploads");
-            if (!Directory.Exists(uploadsPath))
+            
+            GlobalLogger.LogInfo($"File received: {file.FileName}, Size: {file.Length} bytes");
+            if(file.FileName.EndsWith(".pdf") || file.FileName.EndsWith(".PDF"))
             {
-                Directory.CreateDirectory(uploadsPath);
+                GlobalLogger.LogInfo("File is a PDF, proceeding with processing.");
+            }
+            else
+            {
+                GlobalLogger.LogError($"Unsupported file type: {file.FileName}");
+                return BadRequest(new {
+                    message = "Unsupported file type. Only PDF files are allowed.",
+                    exception = "Invalid file type"
+                });
+            }
+            
+            if (!Directory.Exists(_fileUploadPath))
+            {
+                GlobalLogger.LogInfo($"Uploads directory does not exist, creating: {_fileUploadPath}");
+                Directory.CreateDirectory(_fileUploadPath);
+            }
+            else
+            {
+                GlobalLogger.LogInfo($"Uploads directory already exists: {_fileUploadPath}");
             }
 
-            // Generate unique filename to avoid conflicts
-            var fileName = $"{Guid.NewGuid()}_{file.FileName}";
-            var filePath = Path.Combine(uploadsPath, fileName);
+            var fileGuid = Guid.NewGuid();
+            var fileName = $"{fileGuid}.pdf";
+            var filePath = Path.Combine(_fileUploadPath, fileName);
 
-            // Save file to disk
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            await using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
             }
 
-            logger.LogInformation($"File saved: {filePath}");
+            GlobalLogger.LogInfo($"File saved: {filePath}");
 
-            // Process the file and export XML
-            var xmlResults = ExportXmlFiles(uploadsPath, fileName);
-            string receiptXmlContent = string.Empty;
-            string shipmentXmlContent = string.Empty;
+
+            var xmlResults = ExportXmlFiles(_fileUploadPath, fileName);
+            if (xmlResults == null || !xmlResults.Success)
+            {
+                GlobalLogger.LogError($"Failed to export XML files: {xmlResults?.Message}");
+                return BadRequest(new
+                {
+                    message = "Failed to process file",
+                    exception = xmlResults?.Message ?? "Unknown error"
+                });
+            }
+            string receiptXml;
+            string shipmentXml;
             
             using (var reader = new StreamReader(xmlResults.ReceiptXml))
             {
-                receiptXmlContent = reader.ReadToEnd();
+                receiptXml = reader.ReadToEnd();
             }
             
             using (var reader = new StreamReader(xmlResults.ShipmentXml))
             {
-                shipmentXmlContent = reader.ReadToEnd();
+                shipmentXml = reader.ReadToEnd();
             }
             
             var shouldCleanup = configuration.GetValue<bool>("FileCleanup:Enabled");
-            if (shouldCleanup)
-            {
-                var daysToKeep = configuration.GetValue<int>("FileCleanup:DaysToKeep");
-                FileCleanup.CleanupFiles(uploadsPath, daysToKeep);
-                FileCleanup.CleanupFiles(Path.Join(uploadsPath, "../", "output"), daysToKeep);
-                logger.LogInformation($"Cleanup completed. Files older than {daysToKeep} days removed.");
-            }
+            if (!shouldCleanup)
+                return Ok(new
+                {
+                    message = "File processed successfully",
+                    guid = fileGuid.ToString(),
+                    manifestDate = xmlResults.ManifestDate.ToString("YYYY-MM-DD"),
+                    receiptXmlContent = receiptXml,
+                    shipmentXmlContent = shipmentXml
+                });
             
+            var daysToKeep = configuration.GetValue<int>("FileCleanup:DaysToKeep");
+            FileCleanup.CleanupFiles(_fileUploadPath, daysToKeep);
+            FileCleanup.CleanupFiles(Path.Join(_fileUploadPath, "../", "output"), daysToKeep);
+            GlobalLogger.LogInfo($"Cleanup completed. Files older than {daysToKeep} days removed.");
+
             return Ok(new
             {
-                message = "File uploaded successfully",
-                fileName = fileName,
-                filePath = filePath,
-                fileSize = file.Length,
-                manifestDate = xmlResults.ManifestDate,
-                receiptXmlContent = receiptXmlContent,
-                shipmentXmlContent = shipmentXmlContent
+                message = "File processed successfully",
+                guid = fileGuid.ToString(),
+                manifestDate = xmlResults.ManifestDate.ToString("YYYY-MM-DD"),
+                receiptXmlContent = receiptXml,
+                shipmentXmlContent = shipmentXml
             });
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error uploading file");
-            return StatusCode(500, "Internal server error");
+            GlobalLogger.LogError("Error uploading file", ex);
+            return StatusCode(500, new {
+                message = "Error uploading file",
+                exception = ex
+            });
         }
     }
     
     private class XmlExportResults
     {
+        public bool Success { get; set; } = false;
+        public string Message { get; set; } = string.Empty;
         public string ReceiptXml { get; set; } = string.Empty;
         public string ShipmentXml { get; set; } = string.Empty;
         public DateOnly ManifestDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+        
+        public XmlExportResults() { }
+        public XmlExportResults(bool success = false, string message = "")
+        {
+            Success = success;
+            Message = message;
+        }
     }
     
-    private XmlExportResults ExportXmlFiles(string filePath, string fileName)
+    private XmlExportResults? ExportXmlFiles(string filePath, string fileName)
     {
         string basePath = filePath;
         string inputFile = Path.Combine(basePath, fileName);
@@ -105,63 +163,255 @@ public class FileController(
         if (!Directory.Exists(outputPath))
         {
             Directory.CreateDirectory(outputPath);
+            GlobalLogger.LogInfo($"Output directory created: {outputPath}");
         }
         
         string simplifiedPdfPath = outputFile + "_simplified.pdf";
-        PdfProcessor.SimplifyPdf(inputFile, simplifiedPdfPath);
+        if(PdfProcessor.SimplifyPdf(inputFile, simplifiedPdfPath))
+        {
+            GlobalLogger.LogInfo($"PDF simplified successfully: {simplifiedPdfPath}");
+        }
+        else
+        {
+            GlobalLogger.LogError("Failed to simplify PDF");
+            return new XmlExportResults(false, "Failed to simplify PDF");
+        }
 
-        var manifest = PdfProcessor.ConvertPdfToExcel(simplifiedPdfPath, outputFile + ".xlsx");
+        var manifest = PdfProcessor.ConvertPdfToExcel(simplifiedPdfPath, outputFile + ".xlsx", environment.IsDevelopment());
 
-        if (manifest == null) return new XmlExportResults();
+        if (manifest == null) return new XmlExportResults(false, "Failed to convert manifest PDF into Excel");
         
-        ManifestToScale.ConvertManifestToCsv(manifest, outputFile + ".csv");
+        if(ManifestToScale.ConvertManifestToCsv(manifest, outputFile + ".csv"))
+        {
+            GlobalLogger.LogInfo($"Manifest CSV generated successfully: {outputFile}.csv");
+        }
+        else
+        {
+            GlobalLogger.LogError("Failed to convert manifest to CSV");
+            return new XmlExportResults(false, "Failed to convert manifest to CSV");
+        }
 
         var receiptXmlPath = outputFile + ".rcxml";
-        ManifestToScale.GenerateReceiptFromTemplate(manifest, receiptXmlPath);
+        if(ManifestToScale.GenerateReceiptFromTemplate(manifest, receiptXmlPath))
+        {
+            GlobalLogger.LogInfo($"Receipt XML generated successfully: {receiptXmlPath}");
+        }
+        else
+        {
+            GlobalLogger.LogError("Failed to generate receipt XML");
+            return new XmlExportResults(false, "Failed to generate receipt XML");
+        }
+        
 
         var shipmentXmlPath = outputFile + ".shxml";
-        ManifestToScale.GenerateShipmentFromTemplate(manifest, shipmentXmlPath);
+        if(ManifestToScale.GenerateShipmentFromTemplate(manifest, shipmentXmlPath))
+        {
+            GlobalLogger.LogInfo($"Shipment XML generated successfully: {shipmentXmlPath}");
+        }
+        else
+        {
+            GlobalLogger.LogError("Failed to generate shipment XML");
+            return new XmlExportResults(false, "Failed to generate shipment XML");
+        }
 
         var reordered = manifest.GetManifestDate().ToString("yyyy-dd-MM");
         DateOnly result = DateOnly.ParseExact(reordered, "yyyy-dd-MM");
 
-        var xml = new XmlExportResults();
-        xml.ReceiptXml = receiptXmlPath;
-        xml.ShipmentXml = shipmentXmlPath;
-        xml.ManifestDate = result;
-
-        return xml;
+        return new XmlExportResults
+        {
+            ReceiptXml = receiptXmlPath,
+            ShipmentXml = shipmentXmlPath,
+            ManifestDate = result
+        };
     }
+    
+    
+    [HttpGet("{filename}")]
+    public async Task<IActionResult> GetFile(string filename)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(filename) || 
+                filename.Contains("..") || 
+                Path.GetInvalidFileNameChars().Any(filename.Contains))
+            {
+                return BadRequest(new {
+                    message = "Invalid filename",
+                    exception = "Filename contains invalid characters or is empty"
+                });
+            }
+
+            var filePath = Path.Combine(_fileStoragePath, filename);
+            
+            if (!System.IO.File.Exists(filePath))
+            {
+                GlobalLogger.LogError($"File not found: {filePath}");
+                return NotFound(new {
+                    message = "File not found",
+                    exception = "The requested file does not exist"
+                });
+            }
+            
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(filePath, out var contentType))
+            {
+                contentType = "application/octet-stream";
+            }
+            
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+            GlobalLogger.LogInfo($"File retrieved successfully: {filePath}, Size: {fileBytes.Length} bytes");
+            return File(fileBytes, contentType, filename);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            GlobalLogger.LogWarning($"Unauthorized access attempt for file: {filename}");
+            return StatusCode(403, new {
+                message = "Access denied",
+                exception = "You do not have permission to access this file"
+            });
+        }
+        catch (Exception ex)
+        {
+            GlobalLogger.LogError($"Error retrieving file: {filename}");
+            return StatusCode(500, new {
+                message = "Error retrieving file",
+                exception = ex.Message
+            });
+        }
+    }
+
+    [HttpGet("download/{filename}")]
+    public async Task<IActionResult> DownloadFile(string filename)
+    {
+        try
+        {
+            // Validate filename
+            if (string.IsNullOrWhiteSpace(filename) || 
+                filename.Contains("..") || 
+                Path.GetInvalidFileNameChars().Any(filename.Contains))
+            {
+                GlobalLogger.LogError("Invalid filename");
+                return BadRequest( new {
+                    message = "Invalid filename",
+                    exception = "Filename contains invalid characters or is empty"
+                });
+            }
+
+            var filePath = Path.Combine(_fileStoragePath, filename);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                GlobalLogger.LogError($"File not found: {filePath}");
+                return NotFound(new {
+                    message = "File not found",
+                    exception = "The requested file does not exist"
+                });
+            }
+
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(filePath, out var contentType))
+            {
+                contentType = "application/octet-stream";
+            }
+
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+            
+            Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{filename}\"");
+            
+            GlobalLogger.LogInfo($"File downloaded successfully: {filePath}, Size: {fileBytes.Length} bytes");
+            return File(fileBytes, contentType, filename);
+        }
+        catch (Exception ex)
+        {
+            GlobalLogger.LogError($"Error downloading file: {filename}", ex);
+            return StatusCode(500, new
+            {
+                message = "Error downloading file",
+                exception = ex.Message
+            });
+        }
+    }
+
+    [HttpGet("stream/{filename}")]
+    public IActionResult StreamFile(string filename)
+    {
+        try
+        {
+            // Validate filename
+            if (string.IsNullOrWhiteSpace(filename) || 
+                filename.Contains("..") || 
+                Path.GetInvalidFileNameChars().Any(filename.Contains))
+            {
+                GlobalLogger.LogError("Invalid filename");
+                return BadRequest(new {
+                    message = "Invalid filename",
+                    exception = "Filename contains invalid characters or is empty"
+                });
+            }
+
+            var filePath = Path.Combine(_fileStoragePath, filename);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                GlobalLogger.LogError($"File not found: {filePath}");
+                return NotFound($"File '{filename}' not found");
+            }
+
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(filePath, out var contentType))
+            {
+                contentType = "application/octet-stream";
+            }
+
+            // Stream file for better memory efficiency with large files
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            
+            GlobalLogger.LogInfo("File streaming initiated");
+            return File(fileStream, contentType, filename, enableRangeProcessing: true);
+        }
+        catch (Exception ex)
+        {
+            GlobalLogger.LogError($"Error streaming file: '{filename}'", ex);
+            return StatusCode(500, new {
+                message = "Error streaming file",
+                exception = ex.Message
+            });
+        }
+    }
+    
 
     private bool IsAuthenticated()
     {
-        // Get the shared key from configuration
         var expectedKey = configuration["Authentication:SharedKey"];
 
         if (string.IsNullOrEmpty(expectedKey))
         {
-            logger.LogWarning("Shared key not configured");
+            GlobalLogger.LogWarning("Shared key not configured");
             return false;
         }
-
-        // Check for Authorization header
+        
         if (!Request.Headers.ContainsKey("Authorization"))
         {
+            GlobalLogger.LogWarning("Authorization header not found");
             return false;
         }
 
         var authHeader = Request.Headers["Authorization"].FirstOrDefault();
-
-        // Handle both "Bearer token" and direct token formats
+        
         var providedKey = authHeader?.StartsWith("Bearer ") == true
             ? authHeader.Substring(7)
             : authHeader;
-
-        // Use secure string comparison to prevent timing attacks
+        
+        if (string.IsNullOrEmpty(providedKey))
+        {
+            GlobalLogger.LogWarning("Provided authentication key is empty");
+            return false;
+        }
+        
         return SecureStringCompare(expectedKey, providedKey);
     }
 
-    private bool SecureStringCompare(string expected, string provided)
+    private bool SecureStringCompare(string? expected, string? provided)
     {
         if (expected == null || provided == null)
             return false;

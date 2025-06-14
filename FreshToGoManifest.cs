@@ -1,22 +1,33 @@
 using System.Globalization;
+using FTG_PDF_API.Logging;
 
 namespace FTG_PDF_API;
 
 
 public class FreshToGoOrder
 {
-    public DateOnly OrderDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
-    public string StoreNumber { get; set; } = "";
-    public string StoreName { get; set; } = "";
-    public string PoNumber { get; set; } = "";
-    public string CustomerNumber { get; set; } = "";
-    public string OrderNumber { get; set; } = "";
-    public string InventoryNumber { get; set; } = "";
-    public int Quantity { get; set; } = 0;
-    public int CrateQuantity { get; set; } = 0;
+    public DateOnly OrderDate { get; set; }
+    public string StoreNumber { get; set; }
+    public string StoreName { get; set; }
+    public string PoNumber { get; set; }
+    public string CustomerNumber { get; set; }
+    public string OrderNumber { get; set; }
+    public string InventoryNumber { get; set; }
+    public int Quantity { get; set; }
+    public int CrateQuantity { get; set; }
     
-    public FreshToGoOrder(string storeNumber, string storeName, string poNumber, string customerNumber, string orderNumber, string inventoryNumber, int quantity, int crateQuantity)
+    public FreshToGoOrder(string orderDate, string storeNumber, string storeName, string poNumber, string customerNumber, string orderNumber, string inventoryNumber, int quantity, int crateQuantity)
     {
+        try
+        {
+            OrderDate = DateOnly.ParseExact(orderDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+        }
+        catch (Exception e)
+        {
+            GlobalLogger.LogError("Invalid date format: " + orderDate + " - Using today's date as a fallback");
+            OrderDate = DateOnly.FromDateTime(DateTime.Today.ToUniversalTime().AddHours(8)); // Default to today's date in UTC+8
+        }
+        
         StoreNumber = storeNumber;
         StoreName = storeName;
         PoNumber = poNumber;
@@ -32,10 +43,18 @@ public class FreshToGoOrder
         // Example of a order line from PDF:
         //   ShipDate  StoreNum StoreName           PO#      Cust#    Order#  Inv#     Qty Crates
         //  02/06/2025 0332 COLES S/M GARDEN CITY 25486091V 50113007 SO77834 INV169570 3.0 1
-        string[] parts = orderLineFromPdf.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        string[] parts = orderLineFromPdf.Split([' '], StringSplitOptions.RemoveEmptyEntries);
+
+        try
+        {
+            OrderDate = DateOnly.ParseExact(parts[0], "dd/MM/yyyy", CultureInfo.InvariantCulture);
+        }
+        catch (Exception e)
+        {
+            GlobalLogger.LogError("Invalid date format in order string: " + orderLineFromPdf + " - Using today's date as a fallback");
+            OrderDate = DateOnly.FromDateTime(DateTime.Today.ToUniversalTime().AddHours(8)); // Default to today's date in UTC+8
+        }
         
-        
-        OrderDate = DateOnly.ParseExact(parts[0], "dd/MM/yyyy", CultureInfo.InvariantCulture);
         StoreNumber = parts[1];
         
         StoreName = string.Join(" ", parts[2..^6]); // Join all parts except the last 6 which are details
@@ -63,10 +82,7 @@ public class FreshToGoManifest
     private List<FreshToGoOrder> m_Orders = new List<FreshToGoOrder>();
     private int m_totalOrders = 0;
     private int m_totalCrates = 0;
-    private DateOnly m_manifestDate = DateOnly.FromDateTime(DateTime.Today);
-    
-    
-    
+    private DateOnly m_manifestDate = DateOnly.FromDateTime(DateTime.Today.ToUniversalTime().AddHours(8));
     
     public FreshToGoManifest() { }
     

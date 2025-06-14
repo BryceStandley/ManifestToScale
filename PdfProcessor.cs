@@ -1,4 +1,5 @@
 using System.Text;
+using FTG_PDF_API.Logging;
 using OfficeOpenXml;
 
 namespace FTG_PDF_API;
@@ -22,16 +23,12 @@ using System.Linq;
 
 public class PdfProcessor
 {
-
-    /// <summary> Combines all pages of a PDF into a single page, stacking them vertically. </summary>
-    /// <param name="inputPath">Input file path</param>
-    /// <param name="outputPath">Output file path</param>
-    public static void SimplifyPdf(string inputPath, string outputPath)
+    public static bool SimplifyPdf(string inputPath, string outputPath)
     {
         // Check if the output file already exists and delete it
         if (System.IO.Path.Exists(outputPath))
         {
-            Console.WriteLine($"Output file already exists: {outputPath}. Deleting it.");
+            GlobalLogger.LogInfo($"Output file already exists: {outputPath}. Deleting it.");
             File.Delete(outputPath);
         }
             
@@ -61,18 +58,19 @@ public class PdfProcessor
             
             newDocument.Close();
             originalDocument.Close();
+            return true;
 
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error simplifying pdf: {ex.Message}");
+            GlobalLogger.LogError($"Error simplifying pdf: {ex.Message}");
             newDocument.Close();
             originalDocument.Close();
+            return false;
         }
-
     }
     
-    public static FreshToGoManifest? ConvertPdfToExcel(string inputPath, string outputPath)
+    public static FreshToGoManifest? ConvertPdfToExcel(string inputPath, string outputPath, bool isDevelopment = false)
     {
         ExcelPackage.License.SetNonCommercialPersonal("Bryce Standley");
         
@@ -80,21 +78,44 @@ public class PdfProcessor
 
         if (extractedText == string.Empty)
         {
-            Console.WriteLine($"Extracted text from PDF is empty or null. Please check the PDF file.");
+            GlobalLogger.LogError($"Extracted text from PDF is empty or null. Please check the PDF file.");
             return null;
         }
-        
-        File.WriteAllText(System.IO.Path.ChangeExtension(outputPath, "txt"), extractedText);
+
+        if (isDevelopment)
+        {
+            // For development purposes, write the extracted text to a text file
+            GlobalLogger.LogInfo($"Dumping dirty extracted text to file.");
+            File.WriteAllText(System.IO.Path.ChangeExtension(outputPath, "txt"), extractedText);
+        }
         
         string cleanedText = CleanExtractedText(extractedText);
         
-        var cleanedOutputPath = System.IO.Path.ChangeExtension(outputPath, "_cleaned.txt");
-        File.WriteAllText(cleanedOutputPath, cleanedText);
+        if (cleanedText == string.Empty)
+        {
+            GlobalLogger.LogError($"Cleaned text is empty or null. Please check the extracted text.");
+            return null;
+        }
 
-        Console.WriteLine(cleanedText);
+        if (isDevelopment)
+        {
+            // For development purposes, write the cleaned extracted text to a text file
+            GlobalLogger.LogInfo($"Dumping cleaned extracted text to file.");
+            File.WriteAllText(System.IO.Path.ChangeExtension(outputPath, "_cleaned.txt"), cleanedText);
+            
+            GlobalLogger.LogInfo($"Dumping cleaned extracted text to console.");
+            GlobalLogger.LogInfo(cleanedText);
+        }
 
         FreshToGoManifest manifest = new FreshToGoManifest(CreateOrdersFromText(cleanedText));
-
+        
+        if(manifest.GetTotalOrders() == 0)
+        {
+            GlobalLogger.LogError($"No orders found in the cleaned text. Please check the PDF file.");
+            return null;
+        }
+        
+        GlobalLogger.LogInfo($"Total orders found: {manifest.GetTotalOrders()}");
         CreateExcelFromManifest(manifest, outputPath);
         
         return manifest;
@@ -119,7 +140,7 @@ public class PdfProcessor
             orders.Add(new FreshToGoOrder(lines[i]));
         }
         
-        
+        GlobalLogger.LogInfo($"Total orders found: {orders.Count}");
         return orders.ToList();
     }
     
@@ -139,14 +160,14 @@ public class PdfProcessor
             pdfDoc.Close();
             
             
-            
+            GlobalLogger.LogInfo($"Text extracted successfully from PDF: {pdfPath}");
             return text.ToString();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error extracting text: {ex.Message}");
+            GlobalLogger.LogError($"Error extracting text: {ex.Message}");
             pdfDoc.Close();
-            return "";
+            return string.Empty;
         }
     }
 
@@ -200,7 +221,7 @@ public class PdfProcessor
         
         package.SaveAs(new FileInfo(outputPath));
         
-        Console.WriteLine($"Excel file created: {outputPath}");
+        GlobalLogger.LogInfo($"Excel file created: {outputPath}");
     }
     
 }
