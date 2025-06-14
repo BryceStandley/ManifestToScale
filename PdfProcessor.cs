@@ -91,6 +91,8 @@ public class PdfProcessor
         var cleanedOutputPath = System.IO.Path.ChangeExtension(outputPath, "_cleaned.txt");
         File.WriteAllText(cleanedOutputPath, cleanedText);
 
+        Console.WriteLine(cleanedText);
+
         FreshToGoManifest manifest = new FreshToGoManifest(CreateOrdersFromText(cleanedText));
 
         CreateExcelFromManifest(manifest, outputPath);
