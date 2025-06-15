@@ -71,7 +71,7 @@ public class ManifestToScale
         
         details.ReceiptDate = manifest.GetManifestDate().ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
         
-        details.ReceiptId = "FTG/" + manifest.GetManifestDate().ToString("ddMMyyyy");
+        details.ReceiptId = "853540/" + manifest.GetManifestDate().ToString("ddMMyyyy");
         
         details.UserDef6 = details.ReceiptId;
         
