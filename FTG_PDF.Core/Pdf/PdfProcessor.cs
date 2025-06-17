@@ -1,25 +1,14 @@
 using System.Text;
-using FTG_PDF_API.Logging;
+using FTG_PDF.Core.FreshToGo;
+using FTG_PDF.Core.Logging;
 using OfficeOpenXml;
-
-namespace FTG_PDF_API;
-
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Parser;
-using iText.Kernel.Pdf.Canvas.Parser.Data;
 using iText.Kernel.Pdf.Canvas.Parser.Listener;
 using iText.Kernel.Pdf.Canvas;
-using iText.Kernel.Pdf.Xobject;
 using iText.Kernel.Geom;
-using iText.Layout;
-using iText.Layout.Element;
-using OfficeOpenXml;
-using System.Text.RegularExpressions;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Linq;
+
+namespace FTG_PDF.Core.Pdf;
 
 public class PdfProcessor
 {
@@ -132,7 +121,7 @@ public class PdfProcessor
         for(int i = 0; i < lines.Length; i++)
         {
             //Temp Debug
-            Console.WriteLine(lines[i]);
+            //Console.WriteLine(lines[i]);
             // Skip header line
             if (lines[i].StartsWith("ShipDate StoreNum StoreName PO# Cust# Order# Inv# Qty Crates"))
                 continue;

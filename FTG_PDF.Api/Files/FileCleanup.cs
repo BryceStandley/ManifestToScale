@@ -1,4 +1,4 @@
-namespace FTG_PDF_API;
+namespace FTG_PDF.Api.Files;
 
 public class FileCleanup
 {
@@ -29,4 +29,5 @@ public class FileCleanup
             }
         }
     }
+    
 }

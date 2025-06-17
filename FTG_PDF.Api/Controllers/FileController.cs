@@ -1,18 +1,19 @@
-using FTG_PDF_API.Logging;
+using FTG_PDF.Core.Logging;
 using Microsoft.AspNetCore.StaticFiles;
-
-namespace FTG_PDF_API;
-
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
 using System.Text;
+using FTG_PDF.Api.Files;
+using FTG_PDF.Core.FreshToGo;
+using FTG_PDF.Core.Pdf;
+
+namespace FTG_PDF.Api.Controllers;
 
 [ApiController]
 [Route("api/ftg/files")]
 public class FileController(
     IConfiguration configuration,
-    IWebHostEnvironment environment,
-    ILogger<FileController> logger)
+    IWebHostEnvironment environment)
     : ControllerBase
 {
     private readonly string _fileUploadPath = Path.Combine(environment.ContentRootPath, "uploads");
@@ -24,7 +25,6 @@ public class FileController(
     {
         try
         {
-            
             if (!environment.IsDevelopment() && !IsAuthenticated())
             {
                 GlobalLogger.LogWarning("Unauthorized access attempt");
@@ -79,7 +79,7 @@ public class FileController(
             GlobalLogger.LogInfo($"File saved: {filePath}");
 
 
-            var xmlResults = ExportXmlFiles(_fileUploadPath, fileName);
+            var xmlResults = await ExportXmlFiles(_fileUploadPath, fileName);
             if (xmlResults == null || !xmlResults.Success)
             {
                 GlobalLogger.LogError($"Failed to export XML files: {xmlResults?.Message}");
@@ -153,7 +153,7 @@ public class FileController(
         }
     }
     
-    private XmlExportResults? ExportXmlFiles(string filePath, string fileName)
+    private async Task<XmlExportResults?> ExportXmlFiles(string filePath, string fileName)
     {
         string basePath = filePath;
         string inputFile = Path.Combine(basePath, fileName);

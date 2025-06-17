@@ -1,8 +1,7 @@
 using System.Globalization;
-using FTG_PDF_API.Logging;
+using FTG_PDF.Core.Logging;
 
-namespace FTG_PDF_API;
-
+namespace FTG_PDF.Core.FreshToGo;
 
 public class FreshToGoOrder
 {
@@ -25,6 +24,7 @@ public class FreshToGoOrder
         catch (Exception e)
         {
             GlobalLogger.LogError("Invalid date format: " + orderDate + " - Using today's date as a fallback");
+            GlobalLogger.LogError(e.Message);
             OrderDate = DateOnly.FromDateTime(DateTime.Today.ToUniversalTime().AddHours(8)); // Default to today's date in UTC+8
         }
         
@@ -52,6 +52,7 @@ public class FreshToGoOrder
         catch (Exception e)
         {
             GlobalLogger.LogError("Invalid date format in order string: " + orderLineFromPdf + " - Using today's date as a fallback");
+            GlobalLogger.LogError(e.Message);
             OrderDate = DateOnly.FromDateTime(DateTime.Today.ToUniversalTime().AddHours(8)); // Default to today's date in UTC+8
         }
         
@@ -76,8 +77,7 @@ public class FreshToGoManifest
     public int GetTotalOrders() => m_totalOrders;
     public int GetTotalCrates() => m_totalCrates;
     public DateOnly GetManifestDate() => m_manifestDate;
-    
-    
+    public string GetManifestDateString() => m_manifestDate.ToString("dd-MM-yyyy");
     
     private List<FreshToGoOrder> m_Orders = new List<FreshToGoOrder>();
     private int m_totalOrders = 0;

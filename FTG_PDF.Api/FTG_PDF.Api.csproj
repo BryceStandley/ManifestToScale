@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <RootNamespace>FTG_PDF.Api</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Desktop\obj\Desktop.csproj.nuget.dgspec.json" />
+      <_ContentIncludedByDefault Remove="Desktop\obj\project.assets.json" />
+      <_ContentIncludedByDefault Remove="Desktop\obj\project.packagespec.json" />
+      <_ContentIncludedByDefault Remove="Desktop\Properties\launchSettings.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\FTG_PDF.Core\FTG_PDF.Core.csproj" />
+    </ItemGroup>
+
+</Project>

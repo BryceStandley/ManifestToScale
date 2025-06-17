@@ -1,7 +1,8 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
-namespace FTG_PDF_API.Logging;
+namespace FTG_PDF.Core.Logging;
 
 public static class GlobalLogger
     {

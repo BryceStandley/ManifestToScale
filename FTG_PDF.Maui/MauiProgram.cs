@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
+using CommunityToolkit.Maui;
+using FTG_PDF.Core.Logging;
 
-namespace FTG_PDF_DESKTOP;
+namespace FTG_PDF.Maui;
 
 public static class MauiProgram
 {
@@ -9,16 +11,25 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseMauiCommunityToolkit()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
-
-#if DEBUG
+        
+        builder.Services.AddSingleton<AppShell>();
+        builder.Services.AddLogging();
+        builder.Logging.ClearProviders();
+        builder.Logging.SetMinimumLevel(LogLevel.Debug);
+        
+    #if DEBUG
         builder.Logging.AddDebug();
-#endif
+    #endif
 
-        return builder.Build();
+        var app = builder.Build();
+        GlobalLogger.Initialize(app.Services);
+
+        return app;
     }
 }

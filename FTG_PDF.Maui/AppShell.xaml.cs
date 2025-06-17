@@ -1,4 +1,4 @@
-﻿namespace FTG_PDF_DESKTOP;
+﻿namespace FTG_PDF.Maui;
 
 public partial class AppShell : Shell
 {

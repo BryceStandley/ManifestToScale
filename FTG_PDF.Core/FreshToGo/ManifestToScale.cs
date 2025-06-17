@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Xml.Linq;
 using CsvHelper;
-using FTG_PDF_API.Logging;
+using FTG_PDF.Core.Logging;
 
-namespace FTG_PDF_API;
+namespace FTG_PDF.Core.FreshToGo;
 
 public class ManifestToScale
 {
@@ -226,11 +226,13 @@ public class ManifestToScale
                     new XElement(_namespace + "Shipment",
                         new XElement(_namespace + "Action", "SAVE"),
                         new XElement(_namespace + "CreationDateTimeStamp", $"{data.CreationDate}"),
+                        
                         // UserDef fields
                         new XElement(_namespace + "UserDef1", data.Qty),
                         new XElement(_namespace + "UserDef2", data.CustomerNumber),
                         new XElement(_namespace + "UserDef7", "0"),
                         new XElement(_namespace + "UserDef8", "0"),
+                        new XElement(_namespace + "UserDef9", "0"),
                         new XElement(_namespace + "UserStamp", "INTERFACE"),
 
                         // Carrier section
@@ -255,8 +257,7 @@ public class ManifestToScale
                         new XElement(_namespace + "ShipmentId", data.OrderNumber),
                         new XElement(_namespace + "Warehouse", "PER"),
 
-
-
+                        
                         // Details section
                         new XElement(_namespace + "Details",
                             new XElement(_namespace + "ShipmentDetail",
@@ -307,6 +308,7 @@ public class ManifestToScale
                     new XElement(_namespace + "UserDef2", data.CustomerNumber),
                     new XElement(_namespace + "UserDef7", "0"),
                     new XElement(_namespace + "UserDef8", "0"),
+                    new XElement(_namespace + "UserDef9", "0"),
 
                     new XElement(_namespace + "UserStamp", "INTERFACE"),
 
