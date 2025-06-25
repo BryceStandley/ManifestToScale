@@ -111,7 +111,7 @@ public class PdfProcessor
         for(int i = 0; i < lines.Length; i++)
         {
             //Temp Debug
-            Console.WriteLine(lines[i]);
+            //Console.WriteLine(lines[i]);
             // Skip header line
             if (lines[i].StartsWith("ShipDate StoreNum StoreName PO# Cust# Order# Inv# Qty Crates"))
                 continue;

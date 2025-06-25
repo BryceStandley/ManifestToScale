@@ -17,6 +17,7 @@ public class FileController(
     {
         try
         {
+            //logger.LogInformation($"Test: {configuration["Authentication:SharedKey"]}");
             if (!IsAuthenticated())
             {
                 return Unauthorized("Invalid authentication key");
