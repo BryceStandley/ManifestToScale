@@ -91,7 +91,7 @@ public class PdfProcessor
         var cleanedOutputPath = System.IO.Path.ChangeExtension(outputPath, "_cleaned.txt");
         File.WriteAllText(cleanedOutputPath, cleanedText);
 
-        Console.WriteLine(cleanedText);
+        //Console.WriteLine(cleanedText);
 
         FreshToGoManifest manifest = new FreshToGoManifest(CreateOrdersFromText(cleanedText));
 
@@ -137,8 +137,6 @@ public class PdfProcessor
             text.Append(pageText);
             
             pdfDoc.Close();
-            
-            
             
             return text.ToString();
         }
