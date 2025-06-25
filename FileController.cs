@@ -72,13 +72,13 @@ public class FileController(
             
             return Ok(new
             {
-                message = "File uploaded successfully",
-                fileName = fileName,
-                filePath = filePath,
-                fileSize = file.Length,
+                message = xmlResults.ValidationResult.IsValid ? "success" : "error",
+                error = xmlResults.ValidationResult.ErrorMessage,
                 manifestDate = xmlResults.ManifestDate,
-                receiptXmlContent = receiptXmlContent,
-                shipmentXmlContent = shipmentXmlContent
+                totalOrders = xmlResults.Manifest.GetTotalOrders(),
+                totalCrates = xmlResults.Manifest.GetTotalCrates(),
+                receiptXmlContent = xmlResults.ValidationResult.IsValid ? receiptXmlContent : string.Empty,
+                shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty,
             });
         }
         catch (Exception ex)
@@ -93,6 +93,9 @@ public class FileController(
         public string ReceiptXml { get; set; } = string.Empty;
         public string ShipmentXml { get; set; } = string.Empty;
         public DateOnly ManifestDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+        
+        public FreshToGoManifest Manifest { get; set; } = new FreshToGoManifest();
+        public ValidationResult ValidationResult { get; set; }
     }
     
     private XmlExportResults ExportXmlFiles(string filePath, string fileName)
@@ -129,9 +132,63 @@ public class FileController(
         xml.ReceiptXml = receiptXmlPath;
         xml.ShipmentXml = shipmentXmlPath;
         xml.ManifestDate = result;
+        xml.ValidationResult = ValidateManifest(manifest);
+        xml.Manifest = manifest;
 
         return xml;
     }
+    
+    private struct ValidationResult
+    {
+        public bool IsValid { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+
+    private ValidationResult ValidateManifest(FreshToGoManifest manifest)
+    {
+        if (manifest.GetTotalCrates() == 0)
+        {
+            logger.LogWarning("Manifest is empty or null");
+            return new ValidationResult()
+            {
+                IsValid = false,
+                ErrorMessage = "Manifest is empty or null"
+            };
+        }
+
+        // Check for duplicate orders
+        var orderNumbers = new HashSet<string>();
+        foreach (var order in manifest.GetOrders())
+        {
+            if (!orderNumbers.Add(order.OrderNumber))
+            {
+                logger.LogWarning($"Duplicate order found: {order.OrderNumber}");
+                return new ValidationResult()
+                {
+                    IsValid = false,
+                    ErrorMessage = $"Duplicate order found: {order.OrderNumber}"
+                };
+            }
+        }
+
+        // Check for total orders and crates
+        if (manifest.GetTotalOrders() <= 0 || manifest.GetTotalCrates() < 0)
+        {
+            logger.LogWarning("Invalid total orders or crates in manifest");
+            return new ValidationResult()
+            {
+                IsValid = false,
+                ErrorMessage = "Invalid total orders or crates in manifest"
+            };
+        }
+
+        return new ValidationResult()
+        {
+            IsValid = true,
+            ErrorMessage = string.Empty
+        };
+    }
+
 
     private bool IsAuthenticated()
     {

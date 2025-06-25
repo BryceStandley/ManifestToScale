@@ -16,6 +16,94 @@
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0"/>
         <PackageReference Include="PDFsharp" Version="6.2.0" />
         <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.1" />
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\bin\Debug\net9.0\appsettings.Development.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\bin\Debug\net9.0\appsettings.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\bin\Debug\net9.0\FTG_PDF.Api.deps.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\bin\Debug\net9.0\FTG_PDF.Api.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\bin\Debug\net9.0\FTG_PDF.Api.staticwebassets.endpoints.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\bin\Debug\net9.0\FTG_PDF_API.deps.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\bin\Debug\net9.0\FTG_PDF_API.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\bin\Debug\net9.0\FTG_PDF_API.staticwebassets.endpoints.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\obj\Debug\net9.0\FTG_PDF.Api.sourcelink.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\obj\Debug\net9.0\FTG_PDF_API.sourcelink.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\obj\Debug\net9.0\staticwebassets.build.endpoints.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\obj\Debug\net9.0\staticwebassets.build.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\obj\FTG_PDF.Api.csproj.nuget.dgspec.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\obj\FTG_PDF_API.csproj.nuget.dgspec.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\obj\project.assets.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Api\obj\project.packagespec.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-ios\iossimulator-x64\FTG_PDF_DESKTOP.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-maccatalyst\maccatalyst-x64\FTG_PDF_DESKTOP.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win-x64\FTG_PDF.Maui.deps.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win-x64\FTG_PDF.Maui.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win-x64\workloads.365.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win-x64\workloads.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win-x64\workloads.lnl.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win-x64\workloads.qnn.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win-x64\workloads.stx.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\FTG_PDF.Maui.deps.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\FTG_PDF.Maui.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\FTG_PDF_DESKTOP.deps.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\FTG_PDF_DESKTOP.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\workloads.365.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\workloads.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\workloads.lnl.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\workloads.qnn.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\workloads.stx.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Release\net9.0-windows10.0.19041.0\win-x64\FTG_PDF.Maui.deps.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Release\net9.0-windows10.0.19041.0\win-x64\FTG_PDF.Maui.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Release\net9.0-windows10.0.19041.0\win-x64\workloads.365.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Release\net9.0-windows10.0.19041.0\win-x64\workloads.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Release\net9.0-windows10.0.19041.0\win-x64\workloads.lnl.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Release\net9.0-windows10.0.19041.0\win-x64\workloads.qnn.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\bin\Release\net9.0-windows10.0.19041.0\win-x64\workloads.stx.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-ios\iossimulator-x64\FTG_PDF_DESKTOP.sourcelink.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-ios\iossimulator-x64\resizetizer\r\Assets.xcassets\appicon.appiconset\Contents.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-maccatalyst\maccatalyst-x64\FTG_PDF_DESKTOP.sourcelink.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-maccatalyst\maccatalyst-x64\resizetizer\r\Assets.xcassets\appicon.appiconset\Contents.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win-x64\FTG_PDF.Maui.sourcelink.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win-x64\input.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win-x64\MsixContent\workloads.365.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win-x64\MsixContent\workloads.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win-x64\MsixContent\workloads.lnl.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win-x64\MsixContent\workloads.qnn.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win-x64\MsixContent\workloads.stx.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win-x64\output.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\FTG_PDF.Maui.sourcelink.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\FTG_PDF_DESKTOP.sourcelink.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\input.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\MsixContent\workloads.365.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\MsixContent\workloads.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\MsixContent\workloads.lnl.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\MsixContent\workloads.qnn.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\MsixContent\workloads.stx.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\output.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\FTG_PDF.Maui.csproj.nuget.dgspec.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\FTG_PDF_DESKTOP.csproj.nuget.dgspec.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\project.assets.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\project.packagespec.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win-x64\FTG_PDF.Maui.deps.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win-x64\FTG_PDF.Maui.sourcelink.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win-x64\input.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win-x64\MsixContent\workloads.365.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win-x64\MsixContent\workloads.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win-x64\MsixContent\workloads.lnl.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win-x64\MsixContent\workloads.qnn.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win-x64\MsixContent\workloads.stx.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win-x64\output.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win10-x64\input.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win10-x64\MsixContent\workloads.365.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win10-x64\MsixContent\workloads.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win10-x64\MsixContent\workloads.lnl.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win10-x64\MsixContent\workloads.qnn.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win10-x64\MsixContent\workloads.stx.json" />
+      <_ContentIncludedByDefault Remove="FTG_PDF.Maui\obj\Release\net9.0-windows10.0.19041.0\win10-x64\output.json" />
     </ItemGroup>
 
 </Project>
