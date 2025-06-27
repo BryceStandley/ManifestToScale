@@ -123,6 +123,7 @@ public class ManifestToScale
             {
                 CreationDate = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture),
                 StoreNumber = order.StoreNumber.Count() < 4 ? order.StoreNumber.PadLeft(4, '0') : order.StoreNumber,
+                OrderDate = manifest.GetManifestDate().ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture),
                 PoNumber = order.PoNumber,
                 OrderNumber = order.OrderNumber,
                 CustomerNumber = order.CustomerNumber,
@@ -139,6 +140,7 @@ public class ManifestToScale
     private class ShipmentDetails
     {
         public string CreationDate { get; set; } = string.Empty;
+        public string OrderDate { get; set; } = string.Empty;
         public string StoreNumber { get; set; } = string.Empty;
         public string PoNumber { get; set; } = string.Empty;
         public string OrderNumber { get; set; } = string.Empty;
@@ -242,10 +244,10 @@ public class ManifestToScale
 
                         new XElement(_namespace + "CustomerPO", ""),
                         new XElement(_namespace + "ErpOrder", data.PoNumber),
-                        new XElement(_namespace + "OrderDate", data.CreationDate),
+                        new XElement(_namespace + "OrderDate", data.OrderDate),
                         new XElement(_namespace + "OrderType", "FTG"),
-                        new XElement(_namespace + "PlannedShipDate", data.CreationDate),
-                        new XElement(_namespace + "ScheduledShipDate", data.CreationDate),
+                        new XElement(_namespace + "PlannedShipDate", data.OrderDate),
+                        new XElement(_namespace + "ScheduledShipDate", data.OrderDate),
                         new XElement(_namespace + "ShipmentId", data.OrderNumber),
                         new XElement(_namespace + "Warehouse", "PER"),
 
@@ -319,10 +321,10 @@ public class ManifestToScale
 
                     new XElement(_namespace + "CustomerPO", ""),
                     new XElement(_namespace + "ErpOrder", data.PoNumber),
-                    new XElement(_namespace + "OrderDate", data.CreationDate),
+                    new XElement(_namespace + "OrderDate", data.OrderDate),
                     new XElement(_namespace + "OrderType", "FTG"),
-                    new XElement(_namespace + "PlannedShipDate", data.CreationDate),
-                    new XElement(_namespace + "ScheduledShipDate", data.CreationDate),
+                    new XElement(_namespace + "PlannedShipDate", data.OrderDate),
+                    new XElement(_namespace + "ScheduledShipDate", data.OrderDate),
                     new XElement(_namespace + "ShipmentId", data.OrderNumber),
                     new XElement(_namespace + "Warehouse", "PER"),
 
