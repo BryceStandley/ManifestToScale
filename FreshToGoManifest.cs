@@ -58,6 +58,29 @@ public class FreshToGoManifest
     public int GetTotalCrates() => m_totalCrates;
     public DateOnly GetManifestDate() => m_manifestDate;
     
+    public List<FreshToGoOrder> Orders
+    {
+        get => m_Orders;
+        set => m_Orders = value;
+    }
+    
+    public int TotalOrders
+    {
+        get => m_totalOrders;
+        set => m_totalOrders = value;
+    }
+    
+    public int TotalCrates
+    {
+        get => m_totalCrates;
+        set => m_totalCrates = value;
+    }
+    public DateOnly ManifestDate
+    {
+        get => m_manifestDate;
+        set => m_manifestDate = value;
+    }
+    
     
     
     private List<FreshToGoOrder> m_Orders = new List<FreshToGoOrder>();

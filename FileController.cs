@@ -3,6 +3,7 @@ namespace FTG_PDF_API;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 [ApiController]
 [Route("api/ftg/files")]
@@ -70,7 +71,6 @@ public class FileController(
                 FileCleanup.CleanupFiles(Path.Join(uploadsPath, "../", "output"), daysToKeep);
                 logger.LogInformation($"Cleanup completed. Files older than {daysToKeep} days removed.");
             }
-            
             return Ok(new
             {
                 message = xmlResults.ValidationResult.IsValid ? "success" : "error",
@@ -78,6 +78,7 @@ public class FileController(
                 manifestDate = xmlResults.ManifestDate,
                 totalOrders = xmlResults.Manifest.GetTotalOrders(),
                 totalCrates = xmlResults.Manifest.GetTotalCrates(),
+                manifest = xmlResults.Manifest,
                 receiptXmlContent = xmlResults.ValidationResult.IsValid ? receiptXmlContent : string.Empty,
                 shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty,
             });
