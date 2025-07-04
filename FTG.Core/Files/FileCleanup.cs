@@ -1,4 +1,6 @@
-namespace FTG_PDF_API;
+using FTG.Core.Logging;
+
+namespace FTG.Core.Files;
 
 public class FileCleanup
 {
@@ -20,11 +22,11 @@ public class FileCleanup
                 try
                 {
                     fileInfo.Delete();
+                    GlobalLogger.LogInfo($"File {file} deleted");
                 }
                 catch (Exception ex)
                 {
-                    // Log the exception or handle it as needed
-                    Console.WriteLine($"Error deleting file {file}: {ex.Message}");
+                    GlobalLogger.LogError($"Error deleting file {file}: {ex.Message}");
                 }
             }
         }

@@ -1,22 +1,16 @@
 using System.Text;
-using OfficeOpenXml;
+using FTG.Core.Logging;
 
-namespace FTG_PDF_API;
-
+namespace FTG.Core.PDF;
+using Manifest;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Parser;
-using iText.Kernel.Pdf.Canvas.Parser.Data;
 using iText.Kernel.Pdf.Canvas.Parser.Listener;
 using iText.Kernel.Pdf.Canvas;
-using iText.Kernel.Pdf.Xobject;
 using iText.Kernel.Geom;
-using iText.Layout;
-using iText.Layout.Element;
 using OfficeOpenXml;
-using System.Text.RegularExpressions;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
 
@@ -31,7 +25,7 @@ public class PdfProcessor
         // Check if the output file already exists and delete it
         if (System.IO.Path.Exists(outputPath))
         {
-            Console.WriteLine($"Output file already exists: {outputPath}. Deleting it.");
+            GlobalLogger.LogInfo($"Output file already exists: {outputPath}. Deleting it.");
             File.Delete(outputPath);
         }
             
@@ -65,7 +59,7 @@ public class PdfProcessor
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error simplifying pdf: {ex.Message}");
+            GlobalLogger.LogError($"Error simplifying pdf: {ex.Message}");
             newDocument.Close();
             originalDocument.Close();
         }
@@ -80,7 +74,7 @@ public class PdfProcessor
 
         if (extractedText == string.Empty)
         {
-            Console.WriteLine($"Extracted text from PDF is empty or null. Please check the PDF file.");
+            GlobalLogger.LogInfo($"Extracted text from PDF is empty or null. Please check the PDF file.");
             return null;
         }
         
@@ -90,8 +84,6 @@ public class PdfProcessor
         
         var cleanedOutputPath = System.IO.Path.ChangeExtension(outputPath, "_cleaned.txt");
         File.WriteAllText(cleanedOutputPath, cleanedText);
-
-        //Console.WriteLine(cleanedText);
 
         FreshToGoManifest manifest = new FreshToGoManifest(CreateOrdersFromText(cleanedText));
 
@@ -103,20 +95,20 @@ public class PdfProcessor
     private static List<FreshToGoOrder> CreateOrdersFromText(string extractedText)
     {
         // Split the text into lines
-        var lines = extractedText.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        var lines = extractedText.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
         
         // Create a list to hold the orders
         var orders = new List<FreshToGoOrder>();
         
-        for(int i = 0; i < lines.Length; i++)
+        foreach (var line in lines)
         {
             //Temp Debug
             //Console.WriteLine(lines[i]);
             // Skip header line
-            if (lines[i].StartsWith("ShipDate StoreNum StoreName PO# Cust# Order# Inv# Qty Crates"))
+            if (line.StartsWith("ShipDate StoreNum StoreName PO# Cust# Order# Inv# Qty Crates"))
                 continue;
             
-            orders.Add(new FreshToGoOrder(lines[i]));
+            orders.Add(new FreshToGoOrder(line));
         }
         
         
@@ -125,7 +117,7 @@ public class PdfProcessor
     
     private static string ExtractText(string pdfPath)
     {
-        //Open the PDF document outside the try-catch block to ensure it is disposed properly
+        //Open the PDF document outside the try-catch block to ensure it is disposed of properly
         var pdfDoc = new PdfDocument(new PdfReader(pdfPath));
         
         try
@@ -142,7 +134,7 @@ public class PdfProcessor
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error extracting text: {ex.Message}");
+            GlobalLogger.LogError($"Error extracting text: {ex.Message}");
             pdfDoc.Close();
             return "";
         }
@@ -198,7 +190,7 @@ public class PdfProcessor
         
         package.SaveAs(new FileInfo(outputPath));
         
-        Console.WriteLine($"Excel file created: {outputPath}");
+        GlobalLogger.LogInfo($"Excel file created: {outputPath}");
     }
     
 }

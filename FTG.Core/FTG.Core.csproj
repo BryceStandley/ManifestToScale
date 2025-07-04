@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Remove="Class1.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="CsvHelper" Version="33.1.0" />
+      <PackageReference Include="EPPlus" Version="8.0.7" />
+      <PackageReference Include="itext.pdfhtml" Version="6.2.0" />
+      <PackageReference Include="itext7" Version="9.2.0" />
+      <PackageReference Include="itext7.bouncy-castle-adapter" Version="9.2.0" />
+      <PackageReference Include="PDFsharp" Version="6.2.0" />
+      <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.0" />
+    </ItemGroup>
+
+</Project>

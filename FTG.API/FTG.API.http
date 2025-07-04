@@ -1,0 +1,6 @@
+@FTG.API_HostAddress = http://localhost:5090
+
+GET {{FTG.API_HostAddress}}/api/ftg/files/uplaod/
+Accept: application/json
+
+###

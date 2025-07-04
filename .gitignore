@@ -1,7 +1,10 @@
-bin/
-obj/
+/FTG.API/bin/
+/FTG.API/obj/
+/FTG.Core/bin/
+/FTG.Core/obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
-uploads/
-output/
+/FTG.API/uploads/
+/FTG.API/output/
+/FTG.API/complete/

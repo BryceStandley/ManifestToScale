@@ -1,7 +1,6 @@
+namespace FTG.Core.Manifest;
+
 using System.Globalization;
-
-namespace FTG_PDF_API;
-
 
 public class FreshToGoOrder
 {
@@ -57,6 +56,8 @@ public class FreshToGoManifest
     public int GetTotalOrders() => m_totalOrders;
     public int GetTotalCrates() => m_totalCrates;
     public DateOnly GetManifestDate() => m_manifestDate;
+    
+    public ScaleCompany Company { get; set; } = new ScaleCompany();
     
     public List<FreshToGoOrder> Orders
     {
