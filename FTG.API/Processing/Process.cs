@@ -56,8 +56,6 @@ public class Process
         var manifest = AzuraFreshCsv.ConvertCsvToManifest(inputFile);
 
         if (manifest == null) return new XmlExportResults();
-        
-        manifest.Company = ScaleCompany.AzuraFresh;
 
         var receiptXmlPath = finalFile + ".rcxml";
         ManifestToScale.GenerateReceiptFromTemplate(manifest, receiptXmlPath);

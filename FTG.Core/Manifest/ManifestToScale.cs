@@ -71,6 +71,8 @@ public class ManifestToScale
         
         details.ReceiptDate = manifest.GetManifestDate().ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
         
+        details.ReceiptPrefix = manifest.Company.VendorReceiptPrefix;
+        
         details.SetReceiptId(manifest.GetManifestDate().ToString("ddMMyyyy"));
         
         details.UserDef6 = details.ReceiptId;
@@ -98,7 +100,8 @@ public class ManifestToScale
                 CustomerNumber = order.CustomerNumber,
                 Qty = order.Quantity.ToString(),
                 CrateQty = order.CrateQuantity.ToString(),
-                Company = manifest.Company
+                Company = manifest.Company,
+                OrderType = manifest.Company.Company == ScaleCompany.AzuraFresh ? "CAF" : "FTG"
             };
             shipmentDetailsList.Add(details);
         }

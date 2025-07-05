@@ -58,14 +58,14 @@ public class Receipt
                             new XElement(_namespace + "UserDef7", data.UserDef7),
                             new XElement(_namespace + "UserDef8", data.UserDef8),
                             new XElement(_namespace + "UserStamp", "ILSSRV"),
-                            new XElement(_namespace + "Company", data.Company),
+                            new XElement(_namespace + "Company", data.Company.Company),
                             new XElement(_namespace + "ReceiptDate", data.ReceiptDate),
                             new XElement(_namespace + "ReceiptId", data.ReceiptId),
                             new XElement(_namespace + "ReceiptIdType", "PO"),
 
                             // Vendor section
                             new XElement(_namespace + "Vendor",
-                                new XElement(_namespace + "Company", data.Company),
+                                new XElement(_namespace + "Company", data.Company.Company),
                                 new XElement(_namespace + "ShipFrom", data.Company.VendorNumber),
                                 new XElement(_namespace + "ShipFromAddress", 
                                     new XElement(_namespace + "Name", data.Company.VendorName)
@@ -85,7 +85,7 @@ public class Receipt
 
                                     // SKU section
                                     new XElement(_namespace + "SKU",
-                                        new XElement(_namespace + "Company", data.Company),
+                                        new XElement(_namespace + "Company", data.Company.Company),
                                         new XElement(_namespace + "HarmCode", ""),
                                         new XElement(_namespace + "Item", "1111"),
                                         new XElement(_namespace + "Quantity", data.Quantity),

@@ -54,7 +54,7 @@ public class ShipmentFile(List<Shipment> shipments)
 
                         // Customer section
                         new XElement(Namespace + "Customer",
-                            new XElement(Namespace + "Company", data.Company),
+                            new XElement(Namespace + "Company", data.Company.Company),
                             new XElement(Namespace + "Customer", data.StoreNumber),
                             new XElement(Namespace + "FreightBillTo", data.StoreNumber)
                         ),
@@ -80,7 +80,7 @@ public class ShipmentFile(List<Shipment> shipments)
 
                                 // SKU section
                                 new XElement(Namespace + "SKU",
-                                    new XElement(Namespace + "Company", data.Company),
+                                    new XElement(Namespace + "Company", data.Company.Company),
                                     new XElement(Namespace + "Item", "1111"),
                                     new XElement(Namespace + "ItemCategories",
                                         new XElement(Namespace + "Category1", "1111")
@@ -120,7 +120,7 @@ public class ShipmentFile(List<Shipment> shipments)
 
                     // Customer section
                     new XElement(Namespace + "Customer",
-                        new XElement(Namespace + "Company", data.Company),
+                        new XElement(Namespace + "Company", data.Company.Company),
                         new XElement(Namespace + "Customer", data.StoreNumber),
                         new XElement(Namespace + "FreightBillTo", data.StoreNumber)
                     ),
@@ -144,7 +144,7 @@ public class ShipmentFile(List<Shipment> shipments)
 
                             // SKU section
                             new XElement(Namespace + "SKU",
-                                new XElement(Namespace + "Company", data.Company),
+                                new XElement(Namespace + "Company", data.Company.Company),
                                 new XElement(Namespace + "Item", "1111"),
                                 new XElement(Namespace + "ItemCategories",
                                     new XElement(Namespace + "Category1", "1111")
