@@ -8,3 +8,11 @@ riderModule.iml
 /FTG.API/uploads/
 /FTG.API/output/
 /FTG.API/complete/
+
+/CF.ContainerWorker/.wrangler/
+/CF.ContainerWorker/node_modules/
+
+/CF.EmailWorker/.wrangler/
+/CF.EmailWorker/node_modules/
+/CF.EmailWorker/.idea/
+/CF.EmailWorker/.dev.vars

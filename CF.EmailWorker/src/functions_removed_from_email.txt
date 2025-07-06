@@ -1,0 +1,210 @@
+async function sendOldAcknowledgementEmail(env, toAddress, originalFile, manifestDate, formattedDate) {
+	var acknowledgementEmails = env.ACKNOWLEDGEMENT_EMAILS?.toLowerCase().split(',') || [];
+	const form = new FormData();
+	form.append('from', 'Fresh To Go - Scale XML Processor for Receipts and Shipments <noreply@ftg.vectorpixel.net>');
+	form.append('to', [`${toAddress}`, ...acknowledgementEmails]);
+	form.append('subject',
+		`Acknowledgement of FTG Manifest For Scale - ${originalFile} - Received @ ${moment().tz('Australia/Perth').format('DD-MM-YYYY HH:mm:ss')}`
+	);
+	form.append(
+		'html',
+		`
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+		<h2 style="color: #28a745;">Fresh To Go Manifest PDF Processing Acknowledgement! ✅</h2>
+
+		<p>The provided Fresh to Go Manifest PDF has been successfully received and processed into the required formats for Scale Interfacing.</p>
+		<p>The manifest file <strong>${originalFile}</strong> was detected to have the requirement date <strong>${formattedDate}</strong>.</p>
+		<p>Scale interface files will automatically be delivered the date required</p>
+		<h3 style="margin-top: 0;">Interface Files Delivery Date: </h3>
+		<p style="font-weight: bold; color: #007bff;">${moment.tz(manifestDate, 'DDMMYYYY', 'Australia/Perth').format('DD/MM/YYYY')} @ 5am AWST</p>
+
+		<p>If the delivery date is in the past, the files will be sent immediately.</p>
+
+		<div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Processing Details:</h3>
+            <ul style="list-style-type: none; padding-left: 0;">
+				<li>📄 <strong>Original File:</strong> ${originalFile}</li>
+				<li>📅 <strong>Processed At:</strong> ${moment().tz('Australia/Perth').format('DD-MM-YYYY HH:mm:ss')}</li>
+			</ul>
+		</div>
+
+		<div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Files to be Delivered:</h3>
+            <ol>
+				<li><strong>PER-CO-FTG_Receipt-FTG-${manifestDate}.rcxml</strong> - Manhattan Scale Receipt RCXML format</li>
+				<li><strong>PER-CO-FTG_Shipments-FTG-${manifestDate}.shxml</strong> - Manhattan Scale Shipment SHXML format</li>
+            </ol>
+		</div>
+
+        </div>
+	`);
+
+	try {
+		var res = await sendEmailFromMailgun(env, form, 'Acknowledgement');
+		if (!res || res.status !== 200) {
+			cfLog('Error sending acknowledgement email:', res);
+			await sendErrorEmailFromMailgun(env, toAddress, `Failed to send acknowledgement email: ${res.message}`);
+			return new Response('Failed to send acknowledgement email', { status: 500 });
+		}
+		cfLog('Acknowledgement email sent successfully');
+		return { message: 'Acknowledgement Email sent successfully', status: 200 };
+	}
+	catch (error)
+	{
+		cfLog('Error sending acknowledgement email:', error);
+		return new Response(error.message, { status: 500 });
+	}
+
+}
+
+
+async function sendOldResponseEmailFromMailgun(env, toAddress, apiResponses) {
+	const attachments: any[] = [];
+	var originalFile = '';
+	var manifestDate: DateTime | null = null;
+	var formattedDate: DateTime | null = null;
+	var manifest: FreshToGoManifestRecord = {
+		Id: 0,
+		_processedDateTime: '',
+		OriginalFilename: '',
+		_manifestDate: '',
+		_totalCrates: 0,
+		_status: 0,
+		_lastError: '',
+		_receiptId: '',
+		_totalShipments: 0,
+		_receiptXml: '',
+		_shipmentXml: '',
+		_delivered: false,
+	};
+	for (const result of apiResponses) {
+		cfLog('Processing result for', result);
+		originalFile = result.originalFilename || 'ftgmanifest.pdf';
+		manifest.OriginalFilename = originalFile;
+		cfLog(`Manifest Date: ${result.response?.manifestDate}`);
+		//manifestDate = moment.tz(result.response?.manifestDate, 'YYYY-MM-DD', 'Australia/Perth').format('DDMMYYYY');
+		manifestDate = DateTime.fromISO(result.response?.manifestDate, { zone: 'Australia/Perth' });
+		//formattedDate = moment.tz(result.response?.manifestDate, 'YYYY-MM-DD', 'Australia/Perth').format('DD-MM-YYYY');
+		formattedDate = DateTime.fromISO(result.response?.manifestDate, { zone: 'Australia/Perth' });
+		manifest._manifestDate = formattedDate.toLocaleString();
+		manifest._processedDateTime = DateTime.now().setZone('Australia/Perth').toLocaleString(DateTime.DATETIME_SHORT);
+		if (result.error) {
+			cfLog(`❌ ${result.originalFilename}: Error - ${result.error}`);
+			continue;
+		}
+		const responseFiles = convertApiResponseToFiles(result.response, result.originalFilename);
+		attachments.push(...responseFiles);
+	}
+	const form = new FormData();
+	form.append('from', 'Fresh To Go - Scale XML Processor for Receipts and Shipments <noreply@ftg.vectorpixel.net>');
+	if(toAddress === 'bryce@vectorpixel.net')
+	{
+		form.append('to', ['bryce@vectorpixel.net']);
+	}
+	else
+	{
+		form.append('to', [`${toAddress}`, 'bryce@vectorpixel.net']);
+	}
+
+	form.append(
+		'subject',
+		`Processed FTG Manifest For Scale - ${originalFile} - Complete @ ${manifest._processedDateTime}`
+	);
+	form.append(
+		'html',
+		`
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+		<h2 style="color: #28a745;">Fresh To Go Manifest PDF Processing Complete! ✅</h2>
+
+		<p>The provided Fresh to Go Manifest PDF has been successfully processed and converted into the required formats for Scale Interfacing.</p>
+		<h3 style="margin-top: 0;">Manifest Date: ${formattedDate}</h3>
+
+		<div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Processing Details:</h3>
+            <ul style="list-style-type: none; padding-left: 0;">
+				<li>📄 <strong>Original File:</strong> ${originalFile}</li>
+				<li>📅 <strong>Processed At:</strong> ${moment().tz('Australia/Perth').format('DD-MM-YYYY HH:mm:ss')}</li>
+            </ul>
+		</div>
+
+		<div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Attached Files:</h3>
+            <ol>
+				<li><strong>PER-CO-FTG_Receipt-FTG-${manifestDate}.rcxml</strong> - Manhattan Scale Receipt RCXML format</li>
+				<li><strong>PER-CO-FTG_Shipments-FTG-${manifestDate}.shxml</strong> - Manhattan Scale Shipment SHXML format</li>
+            </ol>
+		</div>
+
+        </div>
+	`
+	);
+
+	var delayed = false;
+	for (const attachment of attachments) {
+		const blob = new Blob([attachment.content], {
+			type: attachment.type || 'application/xml',
+		});
+		form.append('attachment', blob, attachment.filename);
+	}
+	const deliveryTime = calculateDeliveryTime(manifestDate);
+	cfLog(`Delivery DateTime ${deliveryTime}`, deliveryTime);
+	if (deliveryTime) {
+		form.append('o:deliverytime', deliveryTime.utc().format('ddd, DD MMM YYYY HH:mm:ss [GMT]'));
+		cfLog(`Email scheduled for delivery at: ${deliveryTime.format('DD/MM/YYYY HH:mm:ss')}`);
+		delayed = true;
+	} else {
+		cfLog('Email will be sent immediately');
+	}
+
+	try {
+		var res = await sendEmailFromMailgun(env, form);
+		if (!res || res.status !== 200) {
+			cfLog('Error sending email:', res);
+			return new Response('Failed to send email', { status: 500 });
+		}
+		if(delayed)
+		{
+			var res2 = await sendAcknowledgementEmail(env, toAddress, originalFile, manifestDate, formattedDate);
+			if (!res2 || res2.status !== 200) {
+				cfLog('Error sending acknowledgement email:', res2);
+				return new Response('Failed to send acknowledgement email', { status: 500 });
+			}
+			cfLog('Acknowledgement email sent successfully');
+		}
+		return { message: 'Email and Acknowledgement sent successfully', status: 200 };
+	} catch (error) {
+		return new Response(error.message);
+	}
+}
+
+async function sendErrorEmailFromMailgun(env, toAddress, message) {
+	const form = new FormData();
+	form.append('from', 'Fresh To Go - Scale XML Processor for Receipts and Shipments <noreply@ftg.vectorpixel.net>');
+	form.append('to', [`${toAddress}`]);
+	form.append('subject', `FTG PDF Processing Error @ ${moment().tz('Australia/Perth').format('DD-MM-YYYY HH:mm:ss')}`);
+	form.append(
+		'html',
+		`
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #dc3545;">Fresh To Go Manifest PDF Processing Error! \u274C</h2>
+
+          <p>The provided Fresh to Go Manifest PDF has encountered an error during processing.</p>
+					<div style="background-color: #f8d7da; padding: 15px; border-radius: 5px; margin: 20px 0;">
+						<h3 style="margin-top: 0;">Error Details:</h3>
+						<p>${message}</p>
+
+        </div>
+      `
+	);
+
+	try {
+		var res = await sendEmailFromMailgun(env, form);
+		if (!res || res.status !== 200) {
+			cfLog('Error sending error email:', res);
+			return new Response('Failed to send error email', { status: 500 });
+		}
+		return { message: 'Error Email sent successfully', status: 200 };
+	} catch (error) {
+		return new Response(error.message);
+	}
+}
