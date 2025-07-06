@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="FTG.MAUI.FileProcessor">
+    <ContentPage.Content>
+        <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+            
+            <!-- Header -->
+            <Label Text="Select the input Manifest file and output folder for processing"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,20"/>
+            
+            <!-- Input File Section -->
+            <Frame BackgroundColor="LightGray" 
+                   Padding="15" 
+                   CornerRadius="10">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Input File" 
+                           FontSize="16" 
+                           FontAttributes="Bold"/>
+                    
+                    <Grid ColumnDefinitions="*,Auto" 
+                          ColumnSpacing="10">
+                        <Entry x:Name="InputFileEntry"
+                               Grid.Column="0"
+                               Placeholder="Select or enter file path..."
+                               Text="{Binding InputFilePath}"/>
+                        <Button x:Name="SelectFileButton"
+                                Grid.Column="1"
+                                Text="Browse"
+                                Clicked="OnSelectFileClicked"
+                                MinimumWidthRequest="80"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- Output Folder Section -->
+            <Frame BackgroundColor="LightGray" 
+                   Padding="15" 
+                   CornerRadius="10">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Output Folder" 
+                           FontSize="16" 
+                           FontAttributes="Bold"/>
+                    
+                    <Grid ColumnDefinitions="*,Auto" 
+                          ColumnSpacing="10">
+                        <Entry x:Name="OutputFolderEntry"
+                               Grid.Column="0"
+                               Placeholder="Select or enter output folder path..."
+                               Text="{Binding OutputFolderPath}"/>
+                        <Button x:Name="SelectFolderButton"
+                                Grid.Column="1"
+                                Text="Browse"
+                                Clicked="OnSelectFolderClicked"
+                                MinimumWidthRequest="80"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <!-- Processing Controls -->
+            <Grid ColumnDefinitions="*,Auto" 
+                  ColumnSpacing="10">
+                <Button x:Name="ProcessButton"
+                        Grid.Column="0"
+                        Text="Start Processing"
+                        Clicked="OnProcessClicked"
+                        BackgroundColor="Green"
+                        TextColor="White"
+                        FontAttributes="Bold"
+                        IsEnabled="{Binding IsNotProcessing}"/>
+                
+                <Button x:Name="OpenOutputButton"
+                        Grid.Column="1"
+                        Text="Open Output"
+                        Clicked="OnOpenOutputClicked"
+                        BackgroundColor="Blue"
+                        TextColor="White"
+                        IsEnabled="{Binding HasOutputFolder}"
+                        MinimumWidthRequest="100"/>
+            </Grid>
+            
+            <!-- Loading Spinner -->
+            <ActivityIndicator x:Name="LoadingSpinner"
+                               IsVisible="{Binding IsProcessing}"
+                               IsRunning="{Binding IsProcessing}"
+                               Color="Blue"
+                               HeightRequest="40"/>
+            
+            <Label Text="Processing file, please wait..."
+                   IsVisible="{Binding IsProcessing}"
+                   HorizontalOptions="Center"
+                   FontAttributes="Italic"/>
+            
+            <!-- Output Information -->
+            <Frame BackgroundColor="Black" 
+                   BorderColor="Gray"
+                   Padding="15" 
+                   CornerRadius="10"
+                   IsVisible="{Binding HasOutputInfo}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Processing Results" 
+                           FontSize="16" 
+                           FontAttributes="Bold"/>
+                    
+                    <ScrollView HeightRequest="200">
+                        <Label x:Name="OutputInfoLabel"
+                               Text="{Binding OutputInfo}"
+                               FontFamily="OpenSansRegular"
+                               FontSize="12"
+                                TextColor="White"
+                               LineBreakMode="WordWrap"/>
+                    </ScrollView>
+                </VerticalStackLayout>
+            </Frame>
+            
+        </VerticalStackLayout>
+    </ScrollView>
+    </ContentPage.Content>
+</ContentPage>

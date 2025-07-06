@@ -57,6 +57,8 @@ public class FreshToGoManifest
     public int GetTotalCrates() => m_totalCrates;
     public DateOnly GetManifestDate() => m_manifestDate;
     
+    public string GetManifestDateString() => m_manifestDate.ToString("dd-MM-yyyy");
+    
     public ScaleCompany Company { get; set; } = new ScaleCompany();
     
     public List<FreshToGoOrder> Orders

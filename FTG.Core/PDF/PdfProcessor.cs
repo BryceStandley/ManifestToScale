@@ -20,7 +20,7 @@ public class PdfProcessor
     /// <summary> Combines all pages of a PDF into a single page, stacking them vertically. </summary>
     /// <param name="inputPath">Input file path</param>
     /// <param name="outputPath">Output file path</param>
-    public static void SimplifyPdf(string inputPath, string outputPath)
+    public static bool SimplifyPdf(string inputPath, string outputPath)
     {
         // Check if the output file already exists and delete it
         if (System.IO.Path.Exists(outputPath))
@@ -55,6 +55,7 @@ public class PdfProcessor
             
             newDocument.Close();
             originalDocument.Close();
+            return true;
 
         }
         catch (Exception ex)
@@ -62,6 +63,7 @@ public class PdfProcessor
             GlobalLogger.LogError($"Error simplifying pdf: {ex.Message}");
             newDocument.Close();
             originalDocument.Close();
+            return false;
         }
 
     }

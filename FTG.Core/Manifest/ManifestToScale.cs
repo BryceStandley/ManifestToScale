@@ -8,7 +8,7 @@ using CsvHelper;
 
 public class ManifestToScale
 {
-    public static void ConvertManifestToCsv(FreshToGoManifest manifest, string outputFile)
+    public static bool ConvertManifestToCsv(FreshToGoManifest manifest, string outputFile)
     {
         try
         {
@@ -20,15 +20,17 @@ public class ManifestToScale
             }
 
             GlobalLogger.LogInfo("CSV file written successfully to: " + outputFile);
+            return true;
         }
         catch (Exception e)
         {
             GlobalLogger.LogError("Error writing to CSV file", e);
+            return false;
         }
 
     }
 
-    public static void GenerateReceiptFromTemplate(FreshToGoManifest manifest, string outputFile)
+    public static bool GenerateReceiptFromTemplate(FreshToGoManifest manifest, string outputFile)
     {
         try
         {
@@ -37,25 +39,29 @@ public class ManifestToScale
             var doc = details.GetReceiptXml();
             doc.Save(outputFile);
             GlobalLogger.LogInfo("Receipt generated successfully: " + outputFile);
-            
+            return true;
+
         }
         catch (Exception e)
         {
             GlobalLogger.LogError("Error generating receipt from template", e);
+            return false;
         }
     }
     
-    public static void GenerateShipmentFromTemplate(FreshToGoManifest manifest, string outputFile)
+    public static bool GenerateShipmentFromTemplate(FreshToGoManifest manifest, string outputFile)
     {
         try
         {
             var shipmentFile = new ShipmentFile(GenerateShipmentDetails(manifest));
             shipmentFile.GetShipmentXml().Save(outputFile);
             GlobalLogger.LogInfo("Shipments generated successfully: " + outputFile);
+            return true;
         }
         catch (Exception e)
         {
             GlobalLogger.LogError("Error generating shipments from template", e);
+            return false;
         }
     }
 
