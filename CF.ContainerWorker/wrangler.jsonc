@@ -1,0 +1,61 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "ftg-pdf-dotnet-cf-container",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-06-20",
+	"logpush" : true,
+	"observability": {
+		"enabled": true
+	},
+	"dev": {
+		"enable_containers": false
+	},
+	"placement": {
+		"mode": "smart"
+	},
+	"routes": [
+		{
+			"pattern": "cf.ftgapi.vectorpixel.net",
+			"custom_domain": true
+		}
+	],
+	"containers": [
+		{
+			"class_name": "FTG_PDF_API",
+			"image": "./Dockerfile",
+			"max_instances": 5,
+			"name" : "ftg-pdf-api",
+
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+		{
+			"class_name": "FTG_PDF_API",
+			"name": "FTG_PDF_API"
+		}
+		]
+	},
+	"migrations": [
+		{
+		"new_sqlite_classes": [
+			"FTG_PDF_API"
+		],
+		"tag": "v1"
+		}
+    ],
+	"secrets_store_secrets": [
+		{
+			"binding": "SECRET_STORE",
+			"store_id": "853f1cbc39ee47d0a6b47b9c9c57daa9",
+			"secret_name": "AUTH_SHAREDKEY"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "PDF_BUCKET",
+			"bucket_name": "ftg-temp-storage"
+		}
+	],
+
+}

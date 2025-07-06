@@ -1,0 +1,22 @@
+{
+	"name": "ftg-pdf-dotnet-cf-container",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"test": "vitest",
+		"cf-typegen": "wrangler types",
+		"push-container" : "wrangler containers push registry.cloudflare.com/e92f180c74f562c076c620f2e6e3e7d0/ftg-pdf-api:latest"
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.8.19",
+		"typescript": "^5.5.2",
+		"vitest": "~3.2.0",
+		"wrangler": "^4.21.2"
+	},
+	"dependencies": {
+		"@cloudflare/containers": "^0.0.13"
+	}
+}

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="using:ABI.Microsoft.UI.Xaml.Controls"
+             x:Class="FTG.Updater.MainPage">
+    <ContentPage.Content>
+        <ScrollView>
+            <VerticalStackLayout Spacing="20" Padding="20">
+            <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Label Text="Manifest To Scale Updater"
+                           FontSize="18" 
+                           FontAttributes="Bold"
+                           Margin="0,0,0,20" 
+                           Grid.Row="0" 
+                           HorizontalOptions="Center" 
+                           VerticalOptions="Start"/>
+                    
+                    <Border Background="LightGray"
+                            Margin="0,0,0,20" 
+                            Padding="10" 
+                            Grid.Row="1">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding StatusText}"
+                                   Margin="0,0,0,10"
+                            />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <ProgressBar Grid.Row="2"
+                                 Height="20" 
+                                 Margin="0,0,0,20"
+                                 Progress="{Binding ProgressValue}"/>
+
+                    <Border Grid.Row="3" 
+                            BackgroundColor="Black" 
+                            Padding="10"
+                            Margin="0,0,0,20"
+                            >
+                        
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Processing Results" 
+                                   FontSize="16" 
+                                   FontAttributes="Bold"/>
+                    
+                            <ScrollView HeightRequest="200">
+                                <Label x:Name="OutputInfoLabel"
+                                       Text="{Binding OutputInfo}"
+                                       FontFamily="OpenSansRegular"
+                                       FontSize="12"
+                                       TextColor="White"
+                                       LineBreakMode="WordWrap"/>
+                            </ScrollView>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Button Grid.Row="4"
+                            Text="Launch"
+                            BackgroundColor="Blue"
+                            TextColor="White"
+                            Clicked="LaunchButton_Click"
+                            IsEnabled="{Binding LaunchEnabled}" Margin="0,20,0,0"/>
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+    </ContentPage.Content>
+</ContentPage>
