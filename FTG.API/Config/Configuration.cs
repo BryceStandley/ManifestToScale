@@ -16,16 +16,16 @@ public class Configuration(IConfiguration configuration, IWebHostEnvironment env
 
     public string GetUploadsPath()
     {
-        return Path.Combine(environment.ContentRootPath, "uploads");
+        return Path.Combine(_environment.ContentRootPath, "uploads");
     }
 
     public string GetOutputPath()
     {
-        return Path.Combine(environment.ContentRootPath, "output");
+        return Path.Combine(_environment.ContentRootPath, "output");
     }
 
     public string GetFinishedPath()
     {
-        return Path.Combine(environment.ContentRootPath, "complete");
+        return Path.Combine(_environment.ContentRootPath, "complete");
     }
 }
