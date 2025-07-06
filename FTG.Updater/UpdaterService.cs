@@ -8,7 +8,7 @@ namespace FTG.Updater;
 
 public class UpdaterService
 {
-    private readonly string _githubRepo = "brycestandley/ManifestToScale";
+    private readonly string _githubRepo = "BryceStandley/ManifestToScale";
     private readonly string? _currentVersion;
     private readonly string? _appDirectory;
     
