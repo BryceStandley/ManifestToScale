@@ -13,10 +13,10 @@ public partial class App : Application
         {
             // Set window size
             Width = 800,
-            Height = 800,
+            Height = 600,
             // Optional: Set minimum size
             MinimumWidth = 800,
-            MinimumHeight = 800,
+            MinimumHeight = 600,
             // Optional: Set maximum size
             MaximumWidth = 1920,
             MaximumHeight = 1080,

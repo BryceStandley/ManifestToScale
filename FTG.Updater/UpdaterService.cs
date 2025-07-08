@@ -12,33 +12,44 @@ public class UpdaterService
     private readonly string? _currentVersion;
     private readonly string? _appDirectory;
     
+    public class UpdateResult
+    {
+        public bool Result { get; set; }
+        public string OutputInfo { get; set; }
+        
+        public UpdateResult(bool result, string outputInfo)
+        {
+            Result = result;
+            OutputInfo = outputInfo;
+        }
+    }
+    
     public UpdaterService()
     {
         _currentVersion = GetCurrentVersion();
         _appDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
     }
 
-    public async Task<bool> CheckForUpdatesAsync()
+    public async Task<UpdateResult> CheckForUpdatesAsync(string outputInfo)
     {
         using var client = new HttpClient();
         client.DefaultRequestHeaders.UserAgent.ParseAdd("MyApp-Updater/1.0");
     
         var response = await client.GetStringAsync(
             $"https://api.github.com/repos/{_githubRepo}/releases/latest");
-    
-        // Use the source generator context
+        
         var release = JsonSerializer.Deserialize<GitHubRelease>(response, GitHubJsonContext.Default.GitHubRelease);
+        outputInfo = $"Latest version: {release.TagName}\nCurrent version: {_currentVersion}\n";
     
-        return IsNewerVersion(release.TagName, _currentVersion);
+        return new UpdateResult(IsNewerVersion(release.TagName, _currentVersion),outputInfo);
     }
 
-    public async Task<bool> DownloadAndInstallUpdateAsync(IProgress<float> progress)
+    public async Task<UpdateResult> DownloadAndInstallUpdateAsync(IProgress<float> progress, string outputInfo)
     {
         try
         {
             var release = await GetLatestReleaseAsync();
-        
-            // Updated to match your actual asset name pattern
+            
             var asset = release.Assets.FirstOrDefault(a => 
                 a.Name.EndsWith(".zip") && 
                 (a.Name.Contains("windows") || a.Name.Contains("ManifestToScale")));
@@ -47,53 +58,78 @@ public class UpdaterService
             {
                 // Log available assets for debugging
                 var availableAssets = string.Join(", ", release.Assets.Select(a => a.Name));
+                outputInfo += $"No suitable asset found. Available assets: {availableAssets}\n";
                 throw new InvalidOperationException($"No suitable asset found. Available assets: {availableAssets}");
             }
-
-            // Rest of the method remains the same...
+            
             var tempPath = Path.Combine(_appDirectory, "update_temp");
             Directory.CreateDirectory(tempPath);
+            
         
             await DownloadFileAsync(asset.BrowserDownloadUrl, 
                 Path.Combine(tempPath, "update.zip"), progress);
+            outputInfo += $"Downloaded... Now updating...\n";
 
-            await ExtractAndReplaceAsync(tempPath);
-        
-            return true;
+            var update = await ExtractAndReplaceAsync(tempPath, outputInfo);
+            if (update.Result)
+            {
+                outputInfo += update.OutputInfo;
+                outputInfo += $"Update completed successfully! New version: {release.TagName}\n";
+                return new UpdateResult(true, outputInfo);
+            }
+            else
+            {
+                outputInfo += update.OutputInfo;
+                outputInfo += "Update failed. Please try again later.\n";
+                return new UpdateResult(false, outputInfo);
+            }
+            
         }
         catch (Exception ex)
         {
-            // Log error
-            return false;
+            outputInfo += $"Error downloading and installing update: {ex.Message}\n";
+            return new UpdateResult(false, outputInfo);
         }
     }
 
-    private async Task ExtractAndReplaceAsync(string tempPath)
+    private async Task<UpdateResult> ExtractAndReplaceAsync(string tempPath, string outputInfo)
     {
         var zipPath = Path.Combine(tempPath, "update.zip");
         var extractPath = Path.Combine(tempPath, "extracted");
         
+        if(Directory.Exists(extractPath))
+        {
+            // Cleanup previous extraction from failed or previous updates
+            Directory.Delete(extractPath, true);
+        }
+        
         ZipFile.ExtractToDirectory(zipPath, extractPath);
+        outputInfo += $"Extracted to {extractPath}\n";
         
         // Stop main app if running
-        var processes = Process.GetProcessesByName("Manifest To Scale");
+        var processes = Process.GetProcessesByName("mts.exe");
         foreach (var process in processes)
         {
+            outputInfo += $"Stopping process: {process.ProcessName} (ID: {process.Id})\n";
             process.Kill();
             await process.WaitForExitAsync();
         }
-
-        // Replace files (preserve user data)
-        var filesToUpdate = Directory.GetFiles(Path.Combine(extractPath, "FTG.MAUI"),"*", 
+        
+        
+        var filesToUpdate = Directory.GetFiles(Path.Combine(extractPath, "app"),"*", 
             SearchOption.AllDirectories);
         
         foreach (var file in filesToUpdate)
         {
-            var relativePath = Path.GetRelativePath(extractPath, file);
-            var targetPath = Path.Combine(_appDirectory, relativePath);
+            var fileName = Path.GetFileName(file);
+            if(fileName == "Manifest To Scale.exe" || fileName == "Manifest To Scale.pdb")
+            {
+                // Skip the updater app executable and its pdb
+                continue;
+            }
             
-            // Skip user data directory
-            if (relativePath.StartsWith("app_data")) continue;
+            var targetPath = Path.Combine(_appDirectory, fileName);
+            outputInfo += $"Copying {file} to {targetPath}\n";
             
             Directory.CreateDirectory(Path.GetDirectoryName(targetPath) ?? string.Empty);
             File.Copy(file, targetPath, true);
@@ -101,6 +137,8 @@ public class UpdaterService
         
         // Cleanup
         Directory.Delete(tempPath, true);
+        outputInfo += "Update completed successfully!\n";
+        return new UpdateResult(true, outputInfo);
     }
     
     private bool IsNewerVersion(string latestVersion, string currentVersion)
@@ -111,7 +149,8 @@ public class UpdaterService
         
         try
         {
-            var latest = new Version(latestVersion);
+            //todo update back to latestversion
+            var latest = new Version(currentVersion);
             var current = new Version(currentVersion);
             Console.WriteLine($"Comparing versions: latest={latest}, current={current}");
             
@@ -171,17 +210,17 @@ public class UpdaterService
         try
         {
             // Try to get version from the main app executable
-            var mainAppPath = Path.Combine(_appDirectory, "MyApp.exe");
+            var mainAppPath = Path.Combine(_appDirectory, "mts.exe");
             if (File.Exists(mainAppPath))
             {
                 var versionInfo = FileVersionInfo.GetVersionInfo(mainAppPath);
-                return versionInfo.ProductVersion ?? versionInfo.FileVersion ?? "1.0.0";
+                return versionInfo.ProductVersion ?? versionInfo.FileVersion ?? "1.0.0.0";
             }
             
             // Fallback to updater version
             var assembly = Assembly.GetExecutingAssembly();
             return assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                ?.InformationalVersion ?? "1.0.0";
+                ?.InformationalVersion ?? "1.0.0.0";
         }
         catch (Exception)
         {

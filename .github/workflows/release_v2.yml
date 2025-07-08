@@ -1,0 +1,138 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Extract Version from Main App
+        id: get_version
+        run: |
+          # Extract version from the main app project file
+          $projectFile = "FTG.MAUI/FTG.MAUI.csproj"
+          [xml]$proj = Get-Content $projectFile
+          $version = $proj.Project.PropertyGroup.Version
+          
+          if ([string]::IsNullOrEmpty($version)) {
+            # Fallback to AssemblyVersion if Version is not set
+            $version = $proj.Project.PropertyGroup.AssemblyVersion
+          }
+          
+          if ([string]::IsNullOrEmpty($version)) {
+            # Default version if none found
+            $version = "1.0.0"
+          }
+          
+          $tagName = "v$version"
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "TAG_NAME=$tagName" >> $env:GITHUB_OUTPUT
+          echo "Detected version: $version"
+          echo "Tag name: $tagName"
+        shell: powershell
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          $tagName = "${{ steps.get_version.outputs.TAG_NAME }}"
+          $tagExists = git tag -l $tagName
+          
+          if ($tagExists) {
+            echo "TAG_EXISTS=true" >> $env:GITHUB_OUTPUT
+            echo "Tag $tagName already exists, skipping release"
+          } else {
+            echo "TAG_EXISTS=false" >> $env:GITHUB_OUTPUT
+            echo "Tag $tagName does not exist, proceeding with release"
+          }
+        shell: powershell
+
+      - name: Create and push tag
+        if: steps.check_tag.outputs.TAG_EXISTS == 'false'
+        run: |
+          $tagName = "${{ steps.get_version.outputs.TAG_NAME }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a $tagName -m "Release $tagName"
+          git push origin $tagName
+        shell: powershell
+
+      - name: Restore dependencies
+        if: steps.check_tag.outputs.TAG_EXISTS == 'false'
+        run: dotnet restore
+
+      - name: Publish Updater
+        if: steps.check_tag.outputs.TAG_EXISTS == 'false'
+        run: |
+          dotnet publish FTG.Updater/FTG.Updater.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:PublishReadyToRun=false `
+            -o ./publish/updater
+
+      - name: Publish Main App
+        if: steps.check_tag.outputs.TAG_EXISTS == 'false'
+        run: |
+          dotnet publish FTG.MAUI/FTG.MAUI.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:PublishReadyToRun=false `
+            -o ./publish/app
+
+      - name: Create Release Package
+        if: steps.check_tag.outputs.TAG_EXISTS == 'false'
+        run: |
+          cd ./publish
+          mkdir ManifestToScale
+          xcopy /E /I updater ManifestToScale\updater\
+          xcopy /E /I app ManifestToScale\app\
+          
+          # Create a simple batch file to launch the updater
+          echo "@echo off" > ManifestToScale\ManifestToScale.bat
+          echo "cd /d %~dp0" >> ManifestToScale\ManifestToScale.bat
+          echo "start updater\Manifest To Scale.exe" >> ManifestToScale\ManifestToScale.bat
+          
+          7z a ManifestToScale-windows-x64.zip ManifestToScale\*
+        shell: cmd
+
+      - name: Create GitHub Release
+        if: steps.check_tag.outputs.TAG_EXISTS == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_version.outputs.TAG_NAME }}
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## Release ${{ steps.get_version.outputs.VERSION }}
+            
+            ### Changes
+            - Auto-generated release from commit ${{ github.sha }}
+            
+            ### Installation
+            1. Download `ManifestToScale-windows-x64.zip`
+            2. Extract to your desired location
+            3. Run `ManifestToScale.bat` to start the application
+            
+            ### Files
+            - `ManifestToScale-windows-x64.zip` - Complete application package
+          files: ./publish/ManifestToScale-windows-x64.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

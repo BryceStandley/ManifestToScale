@@ -11,36 +11,29 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <Label Text="Manifest To Scale Updater"
-                           FontSize="18" 
-                           FontAttributes="Bold"
-                           Margin="0,0,0,20" 
-                           Grid.Row="0" 
-                           HorizontalOptions="Center" 
-                           VerticalOptions="Start"/>
-                    
-                    <Border Background="LightGray"
+                    <Border
                             Margin="0,0,0,20" 
                             Padding="10" 
-                            Grid.Row="1">
+                            Grid.Row="0">
                         <VerticalStackLayout>
                             <Label Text="{Binding StatusText}"
                                    Margin="0,0,0,10"
+                                   TextColor="White"
                             />
                         </VerticalStackLayout>
                     </Border>
 
-                    <ProgressBar Grid.Row="2"
-                                 Height="20" 
+                    <ProgressBar Grid.Row="1"
+                                 Height="40"
+                                 ProgressColor="GreenYellow"
                                  Margin="0,0,0,20"
                                  Progress="{Binding ProgressValue}"/>
 
-                    <Border Grid.Row="3" 
+                    <Border Grid.Row="2" 
                             BackgroundColor="Black" 
                             Padding="10"
                             Margin="0,0,0,20"
@@ -51,7 +44,7 @@
                                    FontSize="16" 
                                    FontAttributes="Bold"/>
                     
-                            <ScrollView HeightRequest="200">
+                            <ScrollView x:Name="OutputScrollView" HeightRequest="200" >
                                 <Label x:Name="OutputInfoLabel"
                                        Text="{Binding OutputInfo}"
                                        FontFamily="OpenSansRegular"
@@ -62,7 +55,7 @@
                         </VerticalStackLayout>
                     </Border>
 
-                    <Button Grid.Row="4"
+                    <Button Grid.Row="3"
                             Text="Launch"
                             BackgroundColor="Blue"
                             TextColor="White"

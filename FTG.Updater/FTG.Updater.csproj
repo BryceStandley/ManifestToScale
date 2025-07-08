@@ -16,11 +16,11 @@
         <PublishTrimmed>true</PublishTrimmed>
 
         <!-- Display name -->
-        <ApplicationTitle>FTG.Updater</ApplicationTitle>
+        <ApplicationTitle>Manifest To Scale Updater</ApplicationTitle>
         <AssemblyName>Manifest To Scale</AssemblyName>
 
         <!-- App Identifier -->
-        <ApplicationId>com.BryceStandley.ftg.updater</ApplicationId>
+        <ApplicationId>com.brycestandley.ftg.updater</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>

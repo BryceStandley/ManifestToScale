@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -21,7 +22,22 @@ public partial class MainPage : ContentPage
         InitializeComponent();
         _updaterService = new UpdaterService();
         BindingContext = this;
+        OutputScrollView.PropertyChanged += OutputScrollView_PropertyChanged;
+        
         Loaded += MainPage_Loaded;
+    }
+    
+    private async void OutputScrollView_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(OutputInfo))
+        {
+            // Scroll to bottom after UI updates
+            await Dispatcher.DispatchAsync(async () =>
+            {
+                await Task.Delay(50); // Small delay to ensure content is rendered
+                await OutputScrollView.ScrollToAsync(0, double.MaxValue, false);
+            });
+        }
     }
     
     public bool LaunchEnabled
@@ -72,25 +88,30 @@ public partial class MainPage : ContentPage
         try
         {
             StatusText = "Checking for updates...";
-            
-            if (await _updaterService.CheckForUpdatesAsync())
+
+            var res = await _updaterService.CheckForUpdatesAsync(OutputInfo);
+            OutputInfo += res.OutputInfo;
+            if (res.Result)
             {
                 StatusText = "Update available. Downloading...";
+                OutputInfo += "Update available. Downloading...\n";
                 
                 var progress = new Progress<float>(value => 
                 {
                     ProgressValue = value;
                 });
                 
-                var success = await _updaterService.DownloadAndInstallUpdateAsync(progress);
+                var success = await _updaterService.DownloadAndInstallUpdateAsync(progress, OutputInfo);
+                OutputInfo += success.OutputInfo;
                 
-                if (success)
+                if (success.Result)
                 {
                     StatusText = "Update completed successfully!";
                 }
                 else
                 {
-                    StatusText = "Update failed. Launching current version.";
+                    StatusText = "Update failed... Launching current version.";
+                    //LaunchButton_Click(sender, e);
                 }
             }
             else
@@ -100,7 +121,9 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            StatusText = "Update check failed. Launching current version.";
+            StatusText = "Update check failed... Launching current version.";
+            OutputInfo = $"Error: {ex.Message}\n{ex.StackTrace}\n";
+            //LaunchButton_Click(sender, e);
         }
         finally
         {
@@ -109,10 +132,11 @@ public partial class MainPage : ContentPage
         }
     }
     
-    private void LaunchButton_Click(object? sender, EventArgs e)
+    private async void LaunchButton_Click(object? sender, EventArgs e)
     {
         LaunchMainApp();
-        Application.Current?.Quit();
+        
+        //Application.Current?.Quit();
     }
     
     private void LaunchMainApp()
@@ -120,15 +144,23 @@ public partial class MainPage : ContentPage
         var appPath = Path.Combine(
             Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
             "mts.exe");
-        Console.WriteLine("Launching main app at: " + appPath);
+        OutputInfo += $"Launching {appPath}\n";
         
         if (File.Exists(appPath))
         {
-            Process.Start(new ProcessStartInfo
+            var startInfo = new ProcessStartInfo
             {
                 FileName = appPath,
-                UseShellExecute = true
-            });
+                UseShellExecute = true,
+                WorkingDirectory = Path.GetDirectoryName(appPath),
+                CreateNoWindow = false,
+                WindowStyle = ProcessWindowStyle.Normal
+            };
+
+            // Clear environment variables that might cause conflicts
+            //startInfo.Environment.Clear();
+        
+            Process.Start(startInfo);
         }
     }
 }
