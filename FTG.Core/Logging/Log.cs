@@ -6,12 +6,10 @@ namespace FTG.Core.Logging;
 
 public static class GlobalLogger
     {
-        private static IServiceProvider? _serviceProvider;
         private static ILogger? _logger;
 
         public static void Initialize(IServiceProvider serviceProvider)
         {
-            _serviceProvider = serviceProvider;
             var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
             _logger = loggerFactory.CreateLogger("GlobalLogger");
         }

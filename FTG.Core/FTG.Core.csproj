@@ -16,6 +16,7 @@
       <PackageReference Include="itext.pdfhtml" Version="6.2.0" />
       <PackageReference Include="itext7" Version="9.2.0" />
       <PackageReference Include="itext7.bouncy-castle-adapter" Version="9.2.0" />
+      <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
       <PackageReference Include="PDFsharp" Version="6.2.0" />
       <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.0" />

@@ -4,15 +4,15 @@ using System.Globalization;
 
 public class FreshToGoOrder
 {
-    public DateOnly OrderDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
-    public string StoreNumber { get; set; } = "";
-    public string StoreName { get; set; } = "";
-    public string PoNumber { get; set; } = "";
-    public string CustomerNumber { get; set; } = "";
-    public string OrderNumber { get; set; } = "";
-    public string InvoiceNumber { get; set; } = "";
-    public int Quantity { get; set; } = 0;
-    public int CrateQuantity { get; set; } = 0;
+    public DateOnly OrderDate { get; init; } = DateOnly.FromDateTime(DateTime.Today);
+    public string StoreNumber { get; }
+    public string StoreName { get; }
+    public string PoNumber { get; }
+    public string CustomerNumber { get; }
+    public string OrderNumber { get;  }
+    public string InvoiceNumber { get; }
+    public int Quantity { get; }
+    public int CrateQuantity { get; }
     
     public FreshToGoOrder(string storeNumber, string storeName, string poNumber, string customerNumber, string orderNumber, string invoiceNumber, int quantity, int crateQuantity)
     {
@@ -28,10 +28,10 @@ public class FreshToGoOrder
     
     public FreshToGoOrder(string orderLineFromPdf)
     {
-        // Example of a order line from PDF:
-        //   ShipDate  StoreNum StoreName           PO#      Cust#    Order#  Inv#     Qty Crates
+        // Example of an order line from PDF:
+        //   ShipDate StoreNum StoreName PO# Cust# Order# Inv# Qty Crates
         //  02/06/2025 0332 COLES S/M GARDEN CITY 25486091V 50113007 SO77834 INV169570 3.0 1
-        string[] parts = orderLineFromPdf.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        var parts = orderLineFromPdf.Split([' '], StringSplitOptions.RemoveEmptyEntries);
         
         
         OrderDate = DateOnly.ParseExact(parts[0], "dd/MM/yyyy", CultureInfo.InvariantCulture);
@@ -52,44 +52,28 @@ public class FreshToGoOrder
 
 public class FreshToGoManifest
 {
-    public List<FreshToGoOrder> GetOrders() => m_Orders;
-    public int GetTotalOrders() => m_totalOrders;
-    public int GetTotalCrates() => m_totalCrates;
-    public DateOnly GetManifestDate() => m_manifestDate;
+    public List<FreshToGoOrder> GetOrders() => Orders;
+    public int GetTotalOrders() => TotalOrders;
+    public int GetTotalCrates() => _mTotalCrates;
+    public DateOnly GetManifestDate() => _mManifestDate;
     
-    public string GetManifestDateString() => m_manifestDate.ToString("dd-MM-yyyy");
+    public string GetManifestDateString() => _mManifestDate.ToString("dd-MM-yyyy");
     
-    public ScaleCompany Company { get; set; } = new ScaleCompany();
-    
-    public List<FreshToGoOrder> Orders
-    {
-        get => m_Orders;
-        set => m_Orders = value;
-    }
-    
-    public int TotalOrders
-    {
-        get => m_totalOrders;
-        set => m_totalOrders = value;
-    }
-    
-    public int TotalCrates
-    {
-        get => m_totalCrates;
-        set => m_totalCrates = value;
-    }
+    public ScaleCompany Company { get; init; } = new();
+
+    private List<FreshToGoOrder> Orders { get; } = [];
+
+    private int TotalOrders { get; }
+
     public DateOnly ManifestDate
     {
-        get => m_manifestDate;
-        set => m_manifestDate = value;
+        get => _mManifestDate;
+        set => _mManifestDate = value;
     }
-    
-    
-    
-    private List<FreshToGoOrder> m_Orders = new List<FreshToGoOrder>();
-    private int m_totalOrders = 0;
-    private int m_totalCrates = 0;
-    private DateOnly m_manifestDate = DateOnly.FromDateTime(DateTime.Today);
+
+
+    private readonly int _mTotalCrates;
+    private DateOnly _mManifestDate = DateOnly.FromDateTime(DateTime.Today);
     
     
     
@@ -98,17 +82,17 @@ public class FreshToGoManifest
     
     public FreshToGoManifest(List<FreshToGoOrder> orders)
     {
-        m_Orders = orders;
-        m_totalOrders = orders.Count;
-        m_totalCrates = orders.Sum(order => order.CrateQuantity);
+        Orders = orders;
+        TotalOrders = orders.Count;
+        _mTotalCrates = orders.Sum(order => order.CrateQuantity);
         if (orders.Count > 0)
         {
-            m_manifestDate = orders[0].OrderDate; // Assuming all orders have the same date
+            _mManifestDate = orders[0].OrderDate; // Assuming all orders have the same date
         }
     }
     
     public void AddOrder(FreshToGoOrder order)
     {
-        m_Orders.Add(order);
+        Orders.Add(order);
     }
 }

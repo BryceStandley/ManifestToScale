@@ -16,13 +16,13 @@
                    Margin="0,0,0,20"/>
             
             <!-- Input File Section -->
-            <Frame BackgroundColor="LightGray" 
-                   Padding="15" 
-                   CornerRadius="10">
+            <Border Padding="15">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Input File" 
                            FontSize="16" 
                            FontAttributes="Bold"/>
+                    <Label Text="Supported formats: .pdf, .csv, .xlsx"
+                           FontSize="12"/>
                     
                     <Grid ColumnDefinitions="*,Auto" 
                           ColumnSpacing="10">
@@ -37,12 +37,10 @@
                                 MinimumWidthRequest="80"/>
                     </Grid>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
             
             <!-- Output Folder Section -->
-            <Frame BackgroundColor="LightGray" 
-                   Padding="15" 
-                   CornerRadius="10">
+            <Border Padding="15">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Output Folder" 
                            FontSize="16" 
@@ -61,7 +59,7 @@
                                 MinimumWidthRequest="80"/>
                     </Grid>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
             
             <!-- Processing Controls -->
             <Grid ColumnDefinitions="*,Auto" 
@@ -98,11 +96,9 @@
                    FontAttributes="Italic"/>
             
             <!-- Output Information -->
-            <Frame BackgroundColor="Black" 
-                   BorderColor="Gray"
-                   Padding="15" 
-                   CornerRadius="10"
-                   IsVisible="{Binding HasOutputInfo}">
+            <Border BackgroundColor="Black" 
+                    Padding="15" 
+                    IsVisible="{Binding HasOutputInfo}">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Processing Results" 
                            FontSize="16" 
@@ -117,7 +113,7 @@
                                LineBreakMode="WordWrap"/>
                     </ScrollView>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
             
         </VerticalStackLayout>
     </ScrollView>

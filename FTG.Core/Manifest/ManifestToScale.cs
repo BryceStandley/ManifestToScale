@@ -3,10 +3,9 @@ using FTG.Core.Logging;
 namespace FTG.Core.Manifest;
 
 using System.Globalization;
-using System.Xml.Linq;
 using CsvHelper;
 
-public class ManifestToScale
+public static class ManifestToScale
 {
     public static bool ConvertManifestToCsv(FreshToGoManifest manifest, string outputFile)
     {
@@ -67,11 +66,11 @@ public class ManifestToScale
 
     private static Receipt GenerateReceiptDetails(FreshToGoManifest manifest)
     {
-        var details = new Receipt();
-        
-        details.CreationDateTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
-        
-        details.UserDef7 = "0" + manifest.GetManifestDate().ToString("yyyyMMdd");
+        var details = new Receipt
+        {
+            CreationDateTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture),
+            UserDef7 = "0" + manifest.GetManifestDate().ToString("yyyyMMdd")
+        };
 
         details.UserDef8 = details.UserDef7;
         
@@ -93,13 +92,11 @@ public class ManifestToScale
 
     private static List<Shipment> GenerateShipmentDetails(FreshToGoManifest manifest)
     {
-        var shipmentDetailsList = new List<Shipment>();
-        foreach(var order in manifest.GetOrders())
-        {
-            var details = new Shipment
+        return manifest.GetOrders()
+            .Select(order => new Shipment
             {
                 CreationDate = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture),
-                StoreNumber = order.StoreNumber.Count() < 4 ? order.StoreNumber.PadLeft(4, '0') : order.StoreNumber,
+                StoreNumber = order.StoreNumber.Length < 4 ? order.StoreNumber.PadLeft(4, '0') : order.StoreNumber,
                 OrderDate = manifest.GetManifestDate().ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture),
                 PoNumber = order.PoNumber,
                 OrderNumber = order.OrderNumber,
@@ -108,12 +105,8 @@ public class ManifestToScale
                 CrateQty = order.CrateQuantity.ToString(),
                 Company = manifest.Company,
                 OrderType = manifest.Company.Company == ScaleCompany.AzuraFresh ? "CAF" : "FTG"
-            };
-            shipmentDetailsList.Add(details);
-        }
-        
-        
-        return shipmentDetailsList;
+            })
+            .ToList();
     }
     
 }

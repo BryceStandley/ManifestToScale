@@ -48,13 +48,11 @@ public static class SettingsManager
 
     public static void SetLastInputFolderPath(string filePath)
     {
-        if (!string.IsNullOrEmpty(filePath))
+        if (string.IsNullOrEmpty(filePath)) return;
+        var folderPath = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(folderPath) && Directory.Exists(folderPath))
         {
-            var folderPath = Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrEmpty(folderPath) && Directory.Exists(folderPath))
-            {
-                Preferences.Set(InputFolderPathKey, folderPath);
-            }
+            Preferences.Set(InputFolderPathKey, folderPath);
         }
     }
 
@@ -63,17 +61,15 @@ public static class SettingsManager
     public static (double Width, double Height) GetWindowSize()
     {
         var json = Preferences.Get(WindowSizeKey, string.Empty);
-        if (!string.IsNullOrEmpty(json))
+        if (string.IsNullOrEmpty(json)) return (1200, 800); // Default size
+        try
         {
-            try
-            {
-                var size = JsonSerializer.Deserialize<WindowSize>(json);
-                return (size.Width, size.Height);
-            }
-            catch
-            {
-                // If deserialization fails, return default
-            }
+            var size = JsonSerializer.Deserialize<WindowSize>(json);
+            if (size != null) return (size.Width, size.Height);
+        }
+        catch
+        {
+            // If deserialization fails, return default
         }
         return (1200, 800); // Default size
     }
@@ -133,16 +129,14 @@ public static class SettingsManager
     public static ProcessingSettings GetProcessingSettings()
     {
         var json = Preferences.Get(ProcessingSettingsKey, string.Empty);
-        if (!string.IsNullOrEmpty(json))
+        if (string.IsNullOrEmpty(json)) return new ProcessingSettings();
+        try
         {
-            try
-            {
-                return JsonSerializer.Deserialize<ProcessingSettings>(json) ?? new ProcessingSettings();
-            }
-            catch
-            {
-                // If deserialization fails, return default
-            }
+            return JsonSerializer.Deserialize<ProcessingSettings>(json) ?? new ProcessingSettings();
+        }
+        catch
+        {
+            // If deserialization fails, return default
         }
         return new ProcessingSettings();
     }

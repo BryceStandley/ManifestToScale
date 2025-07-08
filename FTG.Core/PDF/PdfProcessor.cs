@@ -14,7 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-public class PdfProcessor
+public static class PdfProcessor
 {
 
     /// <summary> Combines all pages of a PDF into a single page, stacking them vertically. </summary>
@@ -29,8 +29,8 @@ public class PdfProcessor
             File.Delete(outputPath);
         }
             
-        PdfDocument originalDocument = new PdfDocument(new PdfReader(inputPath));
-        PdfDocument newDocument = new PdfDocument(new PdfWriter(outputPath));
+        var originalDocument = new PdfDocument(new PdfReader(inputPath));
+        var newDocument = new PdfDocument(new PdfWriter(outputPath));
         
         try
         {
@@ -42,13 +42,13 @@ public class PdfProcessor
             
             var canvas = new PdfCanvas(newSinglePage);
             
-            for(int i = 1; i <= numOfPages; i++)
+            for(var i = 1; i <= numOfPages; i++)
             {
                 var page = originalDocument.GetPage(i);
                 var formXObject = page.CopyAsFormXObject(newDocument);
                 
                 // Calculate position for each page
-                float yPosition = (numOfPages - i) * pageSize.GetHeight();
+                var yPosition = (numOfPages - i) * pageSize.GetHeight();
                 
                 canvas.AddXObjectAt(formXObject, 0, yPosition);
             }
@@ -72,7 +72,7 @@ public class PdfProcessor
     {
         ExcelPackage.License.SetNonCommercialPersonal("Bryce Standley");
         
-        string extractedText = ExtractText(inputPath);
+        var extractedText = ExtractText(inputPath);
 
         if (extractedText == string.Empty)
         {
@@ -82,12 +82,12 @@ public class PdfProcessor
         
         File.WriteAllText(System.IO.Path.ChangeExtension(outputPath, "txt"), extractedText);
         
-        string cleanedText = CleanExtractedText(extractedText);
+        var cleanedText = CleanExtractedText(extractedText);
         
         var cleanedOutputPath = System.IO.Path.ChangeExtension(outputPath, "_cleaned.txt");
         File.WriteAllText(cleanedOutputPath, cleanedText);
 
-        FreshToGoManifest manifest = new FreshToGoManifest(CreateOrdersFromText(cleanedText));
+        var manifest = new FreshToGoManifest(CreateOrdersFromText(cleanedText));
 
         CreateExcelFromManifest(manifest, outputPath);
         
@@ -100,20 +100,9 @@ public class PdfProcessor
         var lines = extractedText.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
         
         // Create a list to hold the orders
-        var orders = new List<FreshToGoOrder>();
-        
-        foreach (var line in lines)
-        {
-            //Temp Debug
-            //Console.WriteLine(lines[i]);
-            // Skip header line
-            if (line.StartsWith("ShipDate StoreNum StoreName PO# Cust# Order# Inv# Qty Crates"))
-                continue;
-            
-            orders.Add(new FreshToGoOrder(line));
-        }
-        
-        
+        var orders = (from line in lines where !line.StartsWith("ShipDate StoreNum StoreName PO# Cust# Order# Inv# Qty Crates") select new FreshToGoOrder(line)).ToList();
+
+
         return orders.ToList();
     }
     
@@ -127,7 +116,7 @@ public class PdfProcessor
             var text = new StringBuilder();
             
             var strategy = new SimpleTextExtractionStrategy();
-            string pageText = PdfTextExtractor.GetTextFromPage(pdfDoc.GetPage(1), strategy);
+            var pageText = PdfTextExtractor.GetTextFromPage(pdfDoc.GetPage(1), strategy);
             text.Append(pageText);
             
             pdfDoc.Close();
@@ -152,9 +141,9 @@ public class PdfProcessor
                                 .Where(line => !string.IsNullOrWhiteSpace(line))
                                 .ToList();
 
-        string headers = "ShipDate StoreNum StoreName PO# Cust# Order# Inv# Qty Crates";
+        const string headers = "ShipDate StoreNum StoreName PO# Cust# Order# Inv# Qty Crates";
 
-        string output = headers + "\n" + string.Join("\n", filteredLines);
+        var output = headers + "\n" + string.Join("\n", filteredLines);
         
         return output;
     }
@@ -177,7 +166,7 @@ public class PdfProcessor
 
         foreach (var order in manifest.GetOrders())
         {
-            int row = worksheet.Dimension.Rows + 1; // Get the next empty row
+            var row = worksheet.Dimension.Rows + 1; // Get the next empty row
             
             worksheet.Cells[row, 1].Value = order.OrderDate.ToString("dd/MM/yyyy");
             worksheet.Cells[row, 2].Value = order.StoreNumber;

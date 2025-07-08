@@ -16,6 +16,7 @@ public partial class MainPage : ContentPage
     private float _progressValue = 0;
     private string _outputInfo = string.Empty;
     private bool _launchEnabled = false;
+    private string? _appDirectory;
     
     public MainPage()
     {
@@ -23,7 +24,7 @@ public partial class MainPage : ContentPage
         _updaterService = new UpdaterService();
         BindingContext = this;
         OutputScrollView.PropertyChanged += OutputScrollView_PropertyChanged;
-        
+        _appDirectory = _updaterService.CurrentAppDirectory;
         Loaded += MainPage_Loaded;
     }
     
@@ -111,7 +112,7 @@ public partial class MainPage : ContentPage
                 else
                 {
                     StatusText = "Update failed... Launching current version.";
-                    //LaunchButton_Click(sender, e);
+                    LaunchButton_Click(sender, e);
                 }
             }
             else
@@ -123,7 +124,7 @@ public partial class MainPage : ContentPage
         {
             StatusText = "Update check failed... Launching current version.";
             OutputInfo = $"Error: {ex.Message}\n{ex.StackTrace}\n";
-            //LaunchButton_Click(sender, e);
+            LaunchButton_Click(sender, e);
         }
         finally
         {
@@ -132,18 +133,20 @@ public partial class MainPage : ContentPage
         }
     }
     
-    private async void LaunchButton_Click(object? sender, EventArgs e)
+    private void LaunchButton_Click(object? sender, EventArgs e)
     {
         LaunchMainApp();
         
-        //Application.Current?.Quit();
+        Application.Current?.Quit();
     }
     
     private void LaunchMainApp()
     {
         var appPath = Path.Combine(
-            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
+            Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty,
+            "../app",
             "mts.exe");
+        OutputInfo += $"App Directory: {_appDirectory}\n";
         OutputInfo += $"Launching {appPath}\n";
         
         if (File.Exists(appPath))
@@ -156,9 +159,7 @@ public partial class MainPage : ContentPage
                 CreateNoWindow = false,
                 WindowStyle = ProcessWindowStyle.Normal
             };
-
-            // Clear environment variables that might cause conflicts
-            //startInfo.Environment.Clear();
+            
         
             Process.Start(startInfo);
         }

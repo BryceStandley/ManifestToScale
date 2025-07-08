@@ -1,17 +1,20 @@
+using JetBrains.Annotations;
+
 namespace FTG.Core.Manifest;
 
 public class ScaleCompany
 {
-    public string Company { get; set; } = "PER-CO-FTG";
-    public string VendorNumber { get; set; } = "853540";
-    public string VendorName { get; set; } = "FRESH TO GO FOODS-853540";
-    public string VendorReceiptPrefix { get; set; } = "FTG/";
+    public string Company { get; } = "PER-CO-FTG";
+    public string VendorNumber { get; } = "853540";
+    public string VendorName { get; } = "FRESH TO GO FOODS-853540";
+    public string VendorReceiptPrefix { get; } = "FTG/";
     
-    public static ScaleCompany AzuraFresh = new ScaleCompany("PER-CO-CAF", "954111", "Azura Fresh NSW P/L", "CAF/");
-    public static ScaleCompany FreshToGo = new ScaleCompany("PER-CO-FTG", "853540", "FRESH TO GO FOODS-853540", "FTG/");
+    public static readonly ScaleCompany AzuraFresh = new("PER-CO-CAF", "954111", "Azura Fresh NSW P/L", "CAF/");
+    [UsedImplicitly] public static readonly ScaleCompany FreshToGo = new ("PER-CO-FTG", "853540", "FRESH TO GO FOODS-853540", "FTG/");
 
     public ScaleCompany() { }
-    public ScaleCompany(string company, string vendorNumber, string vendorName, string vendorReceiptPrefix)
+
+    private ScaleCompany(string company, string vendorNumber, string vendorName, string vendorReceiptPrefix)
     {
         Company = company;
         VendorNumber = vendorNumber;

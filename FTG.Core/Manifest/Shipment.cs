@@ -1,10 +1,11 @@
 using System.Xml.Linq;
+using JetBrains.Annotations;
 
 namespace FTG.Core.Manifest;
 
 public class ShipmentFile(List<Shipment> shipments)
 {
-    public List<Shipment> Shipments { get; set; } = shipments;
+    private List<Shipment> Shipments { get; } = shipments;
     private XDocument? ShipmentXml { get; set; }
 
     public XDocument GetShipmentXml()
@@ -13,7 +14,7 @@ public class ShipmentFile(List<Shipment> shipments)
         return ShipmentXml;
     }
 
-    private class ShipmentXmlBuilder
+    private static class ShipmentXmlBuilder
     {
         private static readonly XNamespace Namespace = "http://www.manh.com/ILSNET/Interface";
 
@@ -30,6 +31,7 @@ public class ShipmentFile(List<Shipment> shipments)
             return document;
         }
         
+        [UsedImplicitly]
         public static XDocument BuildShipmentXml(Shipment data)
         {
             var document = new XDocument(
@@ -164,15 +166,15 @@ public class ShipmentFile(List<Shipment> shipments)
 
 public class Shipment
 {
-    public string CreationDate { get; set; } = string.Empty;
-    public string OrderDate { get; set; } = string.Empty;
-    public string StoreNumber { get; set; } = string.Empty;
-    public string PoNumber { get; set; } = string.Empty;
-    public string OrderNumber { get; set; } = string.Empty;
-    public string CustomerNumber { get; set; } = string.Empty;
-    public string Qty { get; set; } = string.Empty;
-    public string CrateQty { get; set; } = string.Empty;
-    public ScaleCompany Company { get; set; } = new ScaleCompany();
-    public string OrderType { get; set; } = "FTG";
+    public string CreationDate { get; init; } = string.Empty;
+    public string OrderDate { get; init; } = string.Empty;
+    public string StoreNumber { get; init; } = string.Empty;
+    public string PoNumber { get; init; } = string.Empty;
+    public string OrderNumber { get; init; } = string.Empty;
+    public string CustomerNumber { get; init; } = string.Empty;
+    public string Qty { get; init; } = string.Empty;
+    public string CrateQty { get; init; } = string.Empty;
+    public ScaleCompany Company { get; init; } = new();
+    public string OrderType { get; init; } = "FTG";
         
 }

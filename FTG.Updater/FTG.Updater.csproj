@@ -9,15 +9,25 @@
         <SingleProject>true</SingleProject>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+
+        <!-- Windows Specific -->
+        <UseWinUI>true</UseWinUI>
+        <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+        <WindowsPackageType>None</WindowsPackageType>
+
+        <!-- Self-contained deployment -->
         <SelfContained>true</SelfContained>
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+        <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
         <PublishSingleFile>true</PublishSingleFile>
-        <PublishTrimmed>true</PublishTrimmed>
+        <PublishTrimmed>false</PublishTrimmed>
+        <TrimMode>none</TrimMode>
 
         <!-- Display name -->
         <ApplicationTitle>Manifest To Scale Updater</ApplicationTitle>
-        <AssemblyName>Manifest To Scale</AssemblyName>
+        <AssemblyName>ManifestToScale</AssemblyName>
 
         <!-- App Identifier -->
         <ApplicationId>com.brycestandley.ftg.updater</ApplicationId>

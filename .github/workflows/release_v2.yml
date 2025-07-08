@@ -82,7 +82,6 @@ jobs:
             -r win-x64 `
             --self-contained true `
             -p:PublishSingleFile=true `
-            -p:PublishReadyToRun=false `
             -o ./publish/updater
 
       - name: Publish Main App
@@ -93,7 +92,6 @@ jobs:
             -r win-x64 `
             --self-contained true `
             -p:PublishSingleFile=true `
-            -p:PublishReadyToRun=false `
             -o ./publish/app
 
       - name: Create Release Package
@@ -105,9 +103,8 @@ jobs:
           xcopy /E /I app ManifestToScale\app\
           
           # Create a simple batch file to launch the updater
-          echo "@echo off" > ManifestToScale\ManifestToScale.bat
-          echo "cd /d %~dp0" >> ManifestToScale\ManifestToScale.bat
-          echo "start updater\Manifest To Scale.exe" >> ManifestToScale\ManifestToScale.bat
+          echo @echo off > ManifestToScale\ManifestToScale.bat
+          echo start ".\updater\ManifestToScale.exe" >> ManifestToScale\ManifestToScale.bat
           
           7z a ManifestToScale-windows-x64.zip ManifestToScale\*
         shell: cmd

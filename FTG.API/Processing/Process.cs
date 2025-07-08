@@ -9,16 +9,16 @@ using Core.Manifest;
 
 using Core.PDF;
 
-public class Process
+public static class Process
 {
     public static XmlExportResults ExportXmlFiles(IConfig config, string filePath, string fileName)
     {
-        string inputFile = Path.Combine(filePath, fileName);
-        string finalFile = Path.Join(config.GetFinishedPath(), Path.GetFileNameWithoutExtension(fileName));
-        string outputFilePath = Path.Join(config.GetOutputPath(), Path.GetFileNameWithoutExtension(fileName));
+        var inputFile = Path.Combine(filePath, fileName);
+        var finalFile = Path.Join(config.GetFinishedPath(), Path.GetFileNameWithoutExtension(fileName));
+        var outputFilePath = Path.Join(config.GetOutputPath(), Path.GetFileNameWithoutExtension(fileName));
         
         
-        string simplifiedPdfPath = outputFilePath + "_simplified.pdf";
+        var simplifiedPdfPath = outputFilePath + "_simplified.pdf";
         PdfProcessor.SimplifyPdf(inputFile, simplifiedPdfPath);
 
         var manifest = PdfProcessor.ConvertPdfToExcel(simplifiedPdfPath, outputFilePath + ".xlsx");
@@ -34,7 +34,7 @@ public class Process
         ManifestToScale.GenerateShipmentFromTemplate(manifest, shipmentXmlPath);
 
         var reordered = manifest.GetManifestDate().ToString("yyyy-dd-MM");
-        DateOnly result = DateOnly.ParseExact(reordered, "yyyy-dd-MM");
+        var result = DateOnly.ParseExact(reordered, "yyyy-dd-MM");
 
         var xml = new XmlExportResults
         {
@@ -50,8 +50,8 @@ public class Process
     
     public static XmlExportResults ExportCafFiles(IConfig config, string filePath, string fileName)
     {
-        string inputFile = Path.Combine(filePath, fileName);
-        string finalFile = Path.Join(config.GetFinishedPath(), Path.GetFileNameWithoutExtension(fileName));
+        var inputFile = Path.Combine(filePath, fileName);
+        var finalFile = Path.Join(config.GetFinishedPath(), Path.GetFileNameWithoutExtension(fileName));
 
         var manifest = AzuraFreshCsv.ConvertToManifest(inputFile);
 
@@ -64,7 +64,7 @@ public class Process
         ManifestToScale.GenerateShipmentFromTemplate(manifest, shipmentXmlPath);
         
         var reordered = manifest.GetManifestDate().ToString("yyyy-dd-MM");
-        DateOnly result = DateOnly.ParseExact(reordered, "yyyy-dd-MM");
+        var result = DateOnly.ParseExact(reordered, "yyyy-dd-MM");
 
         var xml = new XmlExportResults
         {
@@ -83,7 +83,7 @@ public class Process
         if (manifest.GetTotalCrates() == 0)
         {
             GlobalLogger.LogWarning("Manifest is empty or null");
-            return new ValidationResult()
+            return new ValidationResult
             {
                 IsValid = false,
                 ErrorMessage = "Manifest is empty or null"
@@ -92,34 +92,29 @@ public class Process
 
         // Check for duplicate orders
         var orderNumbers = new HashSet<string>();
-        foreach (var order in manifest.GetOrders())
+        foreach (var order in manifest.GetOrders().Where(order => !orderNumbers.Add(order.OrderNumber)))
         {
-            if (!orderNumbers.Add(order.OrderNumber))
-            {
-                GlobalLogger.LogWarning($"Duplicate order found: {order.OrderNumber}");
-                return new ValidationResult()
-                {
-                    IsValid = false,
-                    ErrorMessage = $"Duplicate order found: {order.OrderNumber}"
-                };
-            }
-        }
-
-        // Check for total orders and crates
-        if (manifest.GetTotalOrders() <= 0 || manifest.GetTotalCrates() < 0)
-        {
-            GlobalLogger.LogWarning("Invalid total orders or crates in manifest");
-            return new ValidationResult()
+            GlobalLogger.LogWarning($"Duplicate order found: {order.OrderNumber}");
+            return new ValidationResult
             {
                 IsValid = false,
-                ErrorMessage = "Invalid total orders or crates in manifest"
+                ErrorMessage = $"Duplicate order found: {order.OrderNumber}"
             };
         }
 
-        return new ValidationResult()
+        // Check for total orders and crates
+        if (manifest.GetTotalOrders() > 0 && manifest.GetTotalCrates() >= 0)
+            return new ValidationResult
+            {
+                IsValid = true,
+                ErrorMessage = string.Empty
+            };
+        GlobalLogger.LogWarning("Invalid total orders or crates in manifest");
+        return new ValidationResult
         {
-            IsValid = true,
-            ErrorMessage = string.Empty
+            IsValid = false,
+            ErrorMessage = "Invalid total orders or crates in manifest"
         };
+
     }
 }

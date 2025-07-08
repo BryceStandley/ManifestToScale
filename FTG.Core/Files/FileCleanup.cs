@@ -2,7 +2,7 @@ using FTG.Core.Logging;
 
 namespace FTG.Core.Files;
 
-public class FileCleanup
+public static class FileCleanup
 {
     public static void CleanupFiles(string directoryPath, int daysToKeep = 7)
     {
@@ -17,17 +17,15 @@ public class FileCleanup
         foreach (var file in files)
         {
             var fileInfo = new FileInfo(file);
-            if (fileInfo.LastWriteTime < thresholdDate)
+            if (fileInfo.LastWriteTime >= thresholdDate) continue;
+            try
             {
-                try
-                {
-                    fileInfo.Delete();
-                    GlobalLogger.LogInfo($"File {file} deleted");
-                }
-                catch (Exception ex)
-                {
-                    GlobalLogger.LogError($"Error deleting file {file}: {ex.Message}");
-                }
+                fileInfo.Delete();
+                GlobalLogger.LogInfo($"File {file} deleted");
+            }
+            catch (Exception ex)
+            {
+                GlobalLogger.LogError($"Error deleting file {file}: {ex.Message}");
             }
         }
     }

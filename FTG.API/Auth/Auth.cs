@@ -2,21 +2,18 @@ namespace FTG.API.Auth;
 
 using System.Security.Cryptography;
 using System.Text;
-using FTG.Core.Logging;
+using Core.Logging;
 
 public interface IAuth
 {
     bool IsAuthenticated(HttpRequest request);
 }
-public class Auth(IConfiguration configuration, IWebHostEnvironment environment) : IAuth
+public class Auth(IConfiguration configuration) : IAuth
 {
-    private readonly IConfiguration _configuration = configuration;
-    private readonly IWebHostEnvironment _environment = environment;
-    
     public bool IsAuthenticated(HttpRequest request)
     {
         // Get the shared key from configuration
-        var expectedKey = _configuration["Authentication:SharedKey"];
+        var expectedKey = configuration["Authentication:SharedKey"];
 
         if (string.IsNullOrEmpty(expectedKey))
         {
@@ -25,23 +22,23 @@ public class Auth(IConfiguration configuration, IWebHostEnvironment environment)
         }
 
         // Check for Authorization header
-        if (!request.Headers.ContainsKey("Authorization"))
+        if (!request.Headers.TryGetValue("Authorization", out var value))
         {
             return false;
         }
 
-        var authHeader = request.Headers["Authorization"].FirstOrDefault();
+        var authHeader = value.FirstOrDefault();
 
         // Handle both "Bearer token" and direct token formats
         var providedKey = authHeader?.StartsWith("Bearer ") == true
-            ? authHeader.Substring(7)
+            ? authHeader[7..]
             : authHeader;
 
         // Use secure string comparison to prevent timing attacks
         return SecureStringCompare(expectedKey, providedKey);
     }
 
-    private bool SecureStringCompare(string? expected, string? provided)
+    private static bool SecureStringCompare(string? expected, string? provided)
     {
         if (expected == null || provided == null)
             return false;

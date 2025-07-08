@@ -1,16 +1,11 @@
-using FTG.API.Config;
-
 namespace FTG.API.Controllers;
 
-using FTG.Core.Files;
-using FTG.Core.Logging;
-using FTG.Core.Manifest;
-using FTG.Core.PDF;
-using FTG.API.Auth;
-using FTG.API.Processing;
+using Config;
+using Core.Files;
+using Core.Logging;
+using Auth;
+using Processing;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Cryptography;
-using System.Text;
 
 [ApiController]
 [Route("api/files")]
@@ -36,7 +31,7 @@ public class FileController(
                 return BadRequest("No file uploaded");
             }
 
-            // Create uploads directory if it doesn't exist
+            // Create an uploads directory if it doesn't exist
             var uploadsPath = Path.Combine(environment.ContentRootPath, "uploads");
             if (!Directory.Exists(uploadsPath))
             {
@@ -48,7 +43,7 @@ public class FileController(
             var filePath = Path.Combine(uploadsPath, fileName);
 
             // Save file to disk
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            await using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
             }
@@ -57,27 +52,39 @@ public class FileController(
 
             // Process the file and export XML
             var xmlResults = Process.ExportXmlFiles(config, uploadsPath, fileName);
-            string receiptXmlContent = string.Empty;
-            string shipmentXmlContent = string.Empty;
+            // ReSharper disable once RedundantAssignment
+            var receiptXmlContent = string.Empty;
+            // ReSharper disable once RedundantAssignment
+            var shipmentXmlContent = string.Empty;
             
             using (var reader = new StreamReader(xmlResults.ReceiptXml))
             {
-                receiptXmlContent = reader.ReadToEnd();
+                receiptXmlContent = await reader.ReadToEndAsync();
             }
             
             using (var reader = new StreamReader(xmlResults.ShipmentXml))
             {
-                shipmentXmlContent = reader.ReadToEnd();
+                shipmentXmlContent = await reader.ReadToEndAsync();
             }
             
             var shouldCleanup = aspConfiguration.GetValue<bool>("FileCleanup:Enabled");
-            if (shouldCleanup)
-            {
-                var daysToKeep = aspConfiguration.GetValue<int>("FileCleanup:DaysToKeep");
-                FileCleanup.CleanupFiles(uploadsPath, daysToKeep);
-                FileCleanup.CleanupFiles(Path.Join(uploadsPath, "../", "output"), daysToKeep);
-                GlobalLogger.LogInfo($"Cleanup completed. Files older than {daysToKeep} days removed.");
-            }
+            if (!shouldCleanup)
+                return Ok(new
+                {
+                    message = xmlResults.ValidationResult.IsValid ? "success" : "error",
+                    error = xmlResults.ValidationResult.ErrorMessage,
+                    manifestDate = xmlResults.ManifestDate,
+                    totalOrders = xmlResults.Manifest.GetTotalOrders(),
+                    totalCrates = xmlResults.Manifest.GetTotalCrates(),
+                    manifest = xmlResults.Manifest,
+                    receiptXmlContent = xmlResults.ValidationResult.IsValid ? receiptXmlContent : string.Empty,
+                    shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty
+                });
+            
+            var daysToKeep = aspConfiguration.GetValue<int>("FileCleanup:DaysToKeep");
+            FileCleanup.CleanupFiles(uploadsPath, daysToKeep);
+            FileCleanup.CleanupFiles(Path.Join(uploadsPath, "../", "output"), daysToKeep);
+            GlobalLogger.LogInfo($"Cleanup completed. Files older than {daysToKeep} days removed.");
             return Ok(new
             {
                 message = xmlResults.ValidationResult.IsValid ? "success" : "error",
@@ -87,7 +94,7 @@ public class FileController(
                 totalCrates = xmlResults.Manifest.GetTotalCrates(),
                 manifest = xmlResults.Manifest,
                 receiptXmlContent = xmlResults.ValidationResult.IsValid ? receiptXmlContent : string.Empty,
-                shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty,
+                shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty
             });
         }
         catch (Exception ex)
@@ -129,8 +136,10 @@ public class FileController(
             
             // Process the file
             var xmlResults = Process.ExportCafFiles(config, config.GetUploadsPath(), fileName);
-            string receiptXmlContent = string.Empty;
-            string shipmentXmlContent = string.Empty;
+            // ReSharper disable once RedundantAssignment
+            var receiptXmlContent = string.Empty;
+            // ReSharper disable once RedundantAssignment
+            var shipmentXmlContent = string.Empty;
             
             using (var reader = new StreamReader(xmlResults.ReceiptXml))
             {
@@ -144,13 +153,22 @@ public class FileController(
             
             // Perform file cleanup if enabled
             var shouldCleanup = aspConfiguration.GetValue<bool>("FileCleanup:Enabled");
-            if (shouldCleanup)
-            {
-                var daysToKeep = aspConfiguration.GetValue<int>("FileCleanup:DaysToKeep");
-                FileCleanup.CleanupFiles(config.GetUploadsPath(), daysToKeep);
-                FileCleanup.CleanupFiles(config.GetOutputPath(), daysToKeep);
-                GlobalLogger.LogInfo($"Cleanup completed. Files older than {daysToKeep} days removed.");
-            }
+            if (!shouldCleanup)
+                return Ok(new
+                {
+                    message = xmlResults.ValidationResult.IsValid ? "success" : "error",
+                    error = xmlResults.ValidationResult.ErrorMessage,
+                    manifestDate = xmlResults.ManifestDate,
+                    totalOrders = xmlResults.Manifest.GetTotalOrders(),
+                    totalCrates = xmlResults.Manifest.GetTotalCrates(),
+                    manifest = xmlResults.Manifest,
+                    receiptXmlContent = xmlResults.ValidationResult.IsValid ? receiptXmlContent : string.Empty,
+                    shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty
+                });
+            var daysToKeep = aspConfiguration.GetValue<int>("FileCleanup:DaysToKeep");
+            FileCleanup.CleanupFiles(config.GetUploadsPath(), daysToKeep);
+            FileCleanup.CleanupFiles(config.GetOutputPath(), daysToKeep);
+            GlobalLogger.LogInfo($"Cleanup completed. Files older than {daysToKeep} days removed.");
             return Ok(new
             {
                 message = xmlResults.ValidationResult.IsValid ? "success" : "error",
@@ -160,7 +178,7 @@ public class FileController(
                 totalCrates = xmlResults.Manifest.GetTotalCrates(),
                 manifest = xmlResults.Manifest,
                 receiptXmlContent = xmlResults.ValidationResult.IsValid ? receiptXmlContent : string.Empty,
-                shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty,
+                shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty
             });
         }
         catch (Exception ex)
