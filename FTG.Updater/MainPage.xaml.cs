@@ -120,6 +120,7 @@ public partial class MainPage : ContentPage
         var appPath = Path.Combine(
             Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
             "mts.exe");
+        Console.WriteLine("Launching main app at: " + appPath);
         
         if (File.Exists(appPath))
         {

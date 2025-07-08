@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FTG.MAUI", "FTG.MAUI\FTG.MA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FTG.Updater", "FTG.Updater\FTG.Updater.csproj", "{56DA5AE2-3B9C-47A9-BC0C-2BF49BF8F203}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FTG.Debug.Email", "FTG.Debug.Email\FTG.Debug.Email.csproj", "{BB2D098B-8590-46CF-B413-E66E19765BE6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,5 +41,9 @@ Global
 		{56DA5AE2-3B9C-47A9-BC0C-2BF49BF8F203}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{56DA5AE2-3B9C-47A9-BC0C-2BF49BF8F203}.Release|Any CPU.Build.0 = Release|Any CPU
 		{56DA5AE2-3B9C-47A9-BC0C-2BF49BF8F203}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{BB2D098B-8590-46CF-B413-E66E19765BE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB2D098B-8590-46CF-B413-E66E19765BE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB2D098B-8590-46CF-B413-E66E19765BE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB2D098B-8590-46CF-B413-E66E19765BE6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

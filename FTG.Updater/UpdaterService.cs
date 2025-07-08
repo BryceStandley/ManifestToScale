@@ -21,13 +21,14 @@ public class UpdaterService
     public async Task<bool> CheckForUpdatesAsync()
     {
         using var client = new HttpClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("ManifestToScale-Updater/1.0");
-        
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("MyApp-Updater/1.0");
+    
         var response = await client.GetStringAsync(
             $"https://api.github.com/repos/{_githubRepo}/releases/latest");
-        
-        var release = JsonSerializer.Deserialize<GitHubRelease>(response);
-        
+    
+        // Use the source generator context
+        var release = JsonSerializer.Deserialize<GitHubRelease>(response, GitHubJsonContext.Default.GitHubRelease);
+    
         return IsNewerVersion(release.TagName, _currentVersion);
     }
 
@@ -36,21 +37,28 @@ public class UpdaterService
         try
         {
             var release = await GetLatestReleaseAsync();
+        
+            // Updated to match your actual asset name pattern
             var asset = release.Assets.FirstOrDefault(a => 
-                a.Name.EndsWith(".zip") && a.Name.Contains("windows"));
+                a.Name.EndsWith(".zip") && 
+                (a.Name.Contains("windows") || a.Name.Contains("ManifestToScale")));
 
-            if (asset == null) return false;
+            if (asset == null) 
+            {
+                // Log available assets for debugging
+                var availableAssets = string.Join(", ", release.Assets.Select(a => a.Name));
+                throw new InvalidOperationException($"No suitable asset found. Available assets: {availableAssets}");
+            }
 
-            // Download update
+            // Rest of the method remains the same...
             var tempPath = Path.Combine(_appDirectory, "update_temp");
             Directory.CreateDirectory(tempPath);
-            
+        
             await DownloadFileAsync(asset.BrowserDownloadUrl, 
                 Path.Combine(tempPath, "update.zip"), progress);
 
-            // Extract and replace files
             await ExtractAndReplaceAsync(tempPath);
-            
+        
             return true;
         }
         catch (Exception ex)
@@ -68,7 +76,7 @@ public class UpdaterService
         ZipFile.ExtractToDirectory(zipPath, extractPath);
         
         // Stop main app if running
-        var processes = Process.GetProcessesByName("MyApp");
+        var processes = Process.GetProcessesByName("Manifest To Scale");
         foreach (var process in processes)
         {
             process.Kill();
@@ -76,7 +84,7 @@ public class UpdaterService
         }
 
         // Replace files (preserve user data)
-        var filesToUpdate = Directory.GetFiles(extractPath, "*", 
+        var filesToUpdate = Directory.GetFiles(Path.Combine(extractPath, "FTG.MAUI"),"*", 
             SearchOption.AllDirectories);
         
         foreach (var file in filesToUpdate)
@@ -105,6 +113,7 @@ public class UpdaterService
         {
             var latest = new Version(latestVersion);
             var current = new Version(currentVersion);
+            Console.WriteLine($"Comparing versions: latest={latest}, current={current}");
             
             return latest > current;
         }
@@ -118,18 +127,19 @@ public class UpdaterService
     private async Task<GitHubRelease> GetLatestReleaseAsync()
     {
         using var client = new HttpClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("MyApp-Updater/1.0");
-        
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("ManifestToScale-Updater/1.0");
+    
         var response = await client.GetStringAsync(
             $"https://api.github.com/repos/{_githubRepo}/releases/latest");
-        
-        return JsonSerializer.Deserialize<GitHubRelease>(response);
+    
+        // Use the source generator context
+        return JsonSerializer.Deserialize<GitHubRelease>(response, GitHubJsonContext.Default.GitHubRelease);
     }
 
     private async Task DownloadFileAsync(string url, string filePath, IProgress<float> progress)
     {
         using var client = new HttpClient();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("MyApp-Updater/1.0");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("ManifestToScale-Updater/1.0");
         
         using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
@@ -181,21 +191,173 @@ public class UpdaterService
     
 }
 
+[JsonSerializable(typeof(GitHubRelease))]
+[JsonSerializable(typeof(GitHubAsset))]
+[JsonSerializable(typeof(GitHubUser))]
+[JsonSerializable(typeof(GitHubAsset[]))]
+public partial class GitHubJsonContext : JsonSerializerContext
+{
+}
+
 // Models for GitHub API
 public class GitHubRelease
 {
+    [JsonPropertyName("url")]
+    public string Url { get; set; }
+
+    [JsonPropertyName("assets_url")]
+    public string AssetsUrl { get; set; }
+
+    [JsonPropertyName("upload_url")]
+    public string UploadUrl { get; set; }
+
+    [JsonPropertyName("html_url")]
+    public string HtmlUrl { get; set; }
+
+    [JsonPropertyName("id")]
+    public long Id { get; set; }
+
+    [JsonPropertyName("author")]
+    public GitHubUser Author { get; set; }
+
+    [JsonPropertyName("node_id")]
+    public string NodeId { get; set; }
+
     [JsonPropertyName("tag_name")]
     public string TagName { get; set; }
-    
+
+    [JsonPropertyName("target_commitish")]
+    public string TargetCommitish { get; set; }
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; }
+
+    [JsonPropertyName("draft")]
+    public bool Draft { get; set; }
+
+    [JsonPropertyName("prerelease")]
+    public bool Prerelease { get; set; }
+
+    [JsonPropertyName("created_at")]
+    public DateTime CreatedAt { get; set; }
+
+    [JsonPropertyName("published_at")]
+    public DateTime PublishedAt { get; set; }
+
     [JsonPropertyName("assets")]
     public GitHubAsset[] Assets { get; set; }
+
+    [JsonPropertyName("tarball_url")]
+    public string TarballUrl { get; set; }
+
+    [JsonPropertyName("zipball_url")]
+    public string ZipballUrl { get; set; }
+
+    [JsonPropertyName("body")]
+    public string Body { get; set; }
 }
 
 public class GitHubAsset
 {
+    [JsonPropertyName("url")]
+    public string Url { get; set; }
+
+    [JsonPropertyName("id")]
+    public long Id { get; set; }
+
+    [JsonPropertyName("node_id")]
+    public string NodeId { get; set; }
+
     [JsonPropertyName("name")]
     public string Name { get; set; }
-    
+
+    [JsonPropertyName("label")]
+    public string Label { get; set; }
+
+    [JsonPropertyName("uploader")]
+    public GitHubUser Uploader { get; set; }
+
+    [JsonPropertyName("content_type")]
+    public string ContentType { get; set; }
+
+    [JsonPropertyName("state")]
+    public string State { get; set; }
+
+    [JsonPropertyName("size")]
+    public long Size { get; set; }
+
+    [JsonPropertyName("digest")]
+    public string Digest { get; set; }
+
+    [JsonPropertyName("download_count")]
+    public int DownloadCount { get; set; }
+
+    [JsonPropertyName("created_at")]
+    public DateTime CreatedAt { get; set; }
+
+    [JsonPropertyName("updated_at")]
+    public DateTime UpdatedAt { get; set; }
+
     [JsonPropertyName("browser_download_url")]
     public string BrowserDownloadUrl { get; set; }
+}
+
+public class GitHubUser
+{
+    [JsonPropertyName("login")]
+    public string Login { get; set; }
+
+    [JsonPropertyName("id")]
+    public long Id { get; set; }
+
+    [JsonPropertyName("node_id")]
+    public string NodeId { get; set; }
+
+    [JsonPropertyName("avatar_url")]
+    public string AvatarUrl { get; set; }
+
+    [JsonPropertyName("gravatar_id")]
+    public string GravatarId { get; set; }
+
+    [JsonPropertyName("url")]
+    public string Url { get; set; }
+
+    [JsonPropertyName("html_url")]
+    public string HtmlUrl { get; set; }
+
+    [JsonPropertyName("followers_url")]
+    public string FollowersUrl { get; set; }
+
+    [JsonPropertyName("following_url")]
+    public string FollowingUrl { get; set; }
+
+    [JsonPropertyName("gists_url")]
+    public string GistsUrl { get; set; }
+
+    [JsonPropertyName("starred_url")]
+    public string StarredUrl { get; set; }
+
+    [JsonPropertyName("subscriptions_url")]
+    public string SubscriptionsUrl { get; set; }
+
+    [JsonPropertyName("organizations_url")]
+    public string OrganizationsUrl { get; set; }
+
+    [JsonPropertyName("repos_url")]
+    public string ReposUrl { get; set; }
+
+    [JsonPropertyName("events_url")]
+    public string EventsUrl { get; set; }
+
+    [JsonPropertyName("received_events_url")]
+    public string ReceivedEventsUrl { get; set; }
+
+    [JsonPropertyName("type")]
+    public string Type { get; set; }
+
+    [JsonPropertyName("user_view_type")]
+    public string UserViewType { get; set; }
+
+    [JsonPropertyName("site_admin")]
+    public bool SiteAdmin { get; set; }
 }

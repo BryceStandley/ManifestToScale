@@ -9,6 +9,10 @@ riderModule.iml
 /FTG.API/output/
 /FTG.API/complete/
 
+/FTG.Debug.Email/appsettings.json
+/FTG.Debug.Email/bin/
+/FTG.Debug.Email/obj/
+
 /CF.ContainerWorker/.wrangler/
 /CF.ContainerWorker/node_modules/
 

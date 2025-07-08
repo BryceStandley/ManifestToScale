@@ -10,18 +10,18 @@ public class FreshToGoOrder
     public string PoNumber { get; set; } = "";
     public string CustomerNumber { get; set; } = "";
     public string OrderNumber { get; set; } = "";
-    public string InventoryNumber { get; set; } = "";
+    public string InvoiceNumber { get; set; } = "";
     public int Quantity { get; set; } = 0;
     public int CrateQuantity { get; set; } = 0;
     
-    public FreshToGoOrder(string storeNumber, string storeName, string poNumber, string customerNumber, string orderNumber, string inventoryNumber, int quantity, int crateQuantity)
+    public FreshToGoOrder(string storeNumber, string storeName, string poNumber, string customerNumber, string orderNumber, string invoiceNumber, int quantity, int crateQuantity)
     {
         StoreNumber = storeNumber;
         StoreName = storeName;
         PoNumber = poNumber;
         CustomerNumber = customerNumber;
         OrderNumber = orderNumber;
-        InventoryNumber = inventoryNumber;
+        InvoiceNumber = invoiceNumber;
         Quantity = quantity;
         CrateQuantity = crateQuantity;
     }
@@ -42,7 +42,7 @@ public class FreshToGoOrder
         // Work backwards for other details which will leave the remaining parts from the store name
         CrateQuantity = int.Parse(parts[^1]);
         Quantity = (int)float.Parse(parts[^2]);
-        InventoryNumber = parts[^3];
+        InvoiceNumber = parts[^3];
         OrderNumber = parts[^4];
         CustomerNumber = parts[^5];
         PoNumber = parts[^6];

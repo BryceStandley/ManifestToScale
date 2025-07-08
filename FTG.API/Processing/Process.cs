@@ -53,7 +53,7 @@ public class Process
         string inputFile = Path.Combine(filePath, fileName);
         string finalFile = Path.Join(config.GetFinishedPath(), Path.GetFileNameWithoutExtension(fileName));
 
-        var manifest = AzuraFreshCsv.ConvertCsvToManifest(inputFile);
+        var manifest = AzuraFreshCsv.ConvertToManifest(inputFile);
 
         if (manifest == null) return new XmlExportResults();
 

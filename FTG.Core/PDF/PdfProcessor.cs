@@ -185,7 +185,7 @@ public class PdfProcessor
             worksheet.Cells[row, 4].Value = order.PoNumber;
             worksheet.Cells[row, 5].Value = order.CustomerNumber;
             worksheet.Cells[row, 6].Value = order.OrderNumber;
-            worksheet.Cells[row, 7].Value = order.InventoryNumber;
+            worksheet.Cells[row, 7].Value = order.InvoiceNumber;
             worksheet.Cells[row, 8].Value = order.Quantity;
             worksheet.Cells[row, 9].Value = order.CrateQuantity;
         }

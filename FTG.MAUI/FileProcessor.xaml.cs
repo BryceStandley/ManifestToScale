@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using CommunityToolkit.Maui.Storage;
 using FTG.Core.Logging;
@@ -14,6 +15,8 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
     private string _outputFolderPath = string.Empty;
     private string _outputInfo = string.Empty;
     private bool _isProcessing = false;
+    private Guid _jobGuid = Guid.Empty;
+    private string? _jobOutputFolder = null;
     
     public FileProcessor()
     {
@@ -183,8 +186,9 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
     {
         var startTime = DateTime.Now;
         var inputFileName = Path.GetFileName(InputFilePath);
-        var jobGuid = Guid.NewGuid();
-        var jobOutputFolder = Path.Combine(OutputFolderPath, jobGuid.ToString());
+        _jobGuid = Guid.NewGuid();
+        var jobOutputFolder = Path.Combine(OutputFolderPath, _jobGuid.ToString());
+        _jobOutputFolder = jobOutputFolder;
         if (!Directory.Exists(jobOutputFolder))
         {
             GlobalLogger.LogInfo($"Creating output folder: {jobOutputFolder}");
@@ -208,7 +212,7 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
             $"Output root folder: {OutputFolderPath}",
             $"Output file: {outputFileName}",
             "",
-            $"Output Job Id: {jobGuid}",
+            $"Output Job Id: {_jobGuid}",
             $"Output Job Folder: {jobOutputFolder}",
             $"Output Scale Interface Folder: {scaleInterfaceFolderOutput}",
             ""
@@ -323,7 +327,7 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
             }
             else if (fileInfo.Extension == ".csv" || fileInfo.Extension == ".xlsx")
             {
-                manifest = AzuraFreshCsv.ConvertCsvToManifest(InputFilePath);
+                manifest = AzuraFreshCsv.ConvertToManifest(InputFilePath);
                 
                 if (manifest == null)
                 {
@@ -378,10 +382,6 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                 }
             }
             
-            
-
-            
-            
             var endTime = DateTime.Now;
             var duration = endTime - startTime;
             info.Add("");
@@ -411,12 +411,26 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                 await DisplayAlert("Error", "Output folder does not exist.", "OK");
                 return;
             }
+            
+            /*if (Directory.Exists(OutputFolderPath) && (string.IsNullOrWhiteSpace(_jobOutputFolder) || !Directory.Exists(_jobOutputFolder)))
+            {
+                await DisplayAlert("Error", "Job Output folder does not exist.", "OK");
+                return;
+            }*/
 
             // Open folder in file explorer
-            await Launcher.Default.OpenAsync(new OpenFileRequest
+            if (_jobOutputFolder != null)
             {
-                File = new ReadOnlyFile(OutputFolderPath)
-            });
+                Process.Start("explorer.exe", _jobOutputFolder);
+            }
+            else
+            {
+                await Launcher.Default.OpenAsync(new OpenFileRequest
+                {
+                    File = new ReadOnlyFile(OutputFolderPath)
+                });
+            }
+
         }
         catch (Exception ex)
         {
