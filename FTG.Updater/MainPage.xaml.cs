@@ -108,6 +108,7 @@ public partial class MainPage : ContentPage
                 if (success.Result)
                 {
                     StatusText = "Update completed successfully!";
+                    LaunchButton_Click(sender, e);
                 }
                 else
                 {
@@ -118,6 +119,7 @@ public partial class MainPage : ContentPage
             else
             {
                 StatusText = "No updates available.";
+                LaunchButton_Click(sender, e);
             }
         }
         catch (Exception ex)

@@ -104,7 +104,7 @@ jobs:
           
           # Create a simple batch file to launch the updater
           echo @echo off > ManifestToScale\ManifestToScale.bat
-          echo start ".\updater\ManifestToScale.exe" >> ManifestToScale\ManifestToScale.bat
+          echo start .\updater\ManifestToScale.exe >> ManifestToScale\ManifestToScale.bat
           
           7z a ManifestToScale-windows-x64.zip ManifestToScale\*
         shell: cmd
