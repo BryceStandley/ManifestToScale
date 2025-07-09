@@ -26,7 +26,7 @@
 
 **Application release extracted files:**
 
-![img.png](docs/images/win_release_files.png)
+![win_release_files.png](docs/images/win_release_files.png)
 
 
 ---

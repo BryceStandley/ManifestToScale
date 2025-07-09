@@ -130,7 +130,7 @@ jobs:
             
             ### Files
             - `ManifestToScale-windows-x64.zip` - Complete application package
-          files: ./publish/ManifestToScale-windows-x64.zip
+          files: ./publish/ManifestToScale-${{ steps.get_version.outputs.TAG_NAME }}-windows-x64.zip
           draft: false
           prerelease: false
         env:
