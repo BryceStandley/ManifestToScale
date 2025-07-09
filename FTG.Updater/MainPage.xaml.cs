@@ -139,7 +139,7 @@ public partial class MainPage : ContentPage
     {
         LaunchMainApp();
         
-        //Application.Current?.Quit();
+        Application.Current?.Quit();
     }
     
     private void LaunchMainApp()
