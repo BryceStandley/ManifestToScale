@@ -36,10 +36,9 @@ jobs:
           if ([string]::IsNullOrEmpty($version)) {
             # Default version if none found
             $version = "1.0.0"
-          }
-          
-          if (![string]::IsNullOrEmpty($version)) {
-            $version = $version.Trim()
+          } else {
+              # Trim whitespace from the version string
+              $version = $version.Trim()
           }
           
           $tagName = "v$version"
