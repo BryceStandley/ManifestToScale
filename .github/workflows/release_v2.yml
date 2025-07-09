@@ -23,14 +23,14 @@ jobs:
       - name: Extract Version from Main App
         id: get_version
         run: |
-          # Extract version from the main app project file
+          # Extract AppVersion from the main app project file
           $projectFile = "FTG.MAUI/FTG.MAUI.csproj"
           [xml]$proj = Get-Content $projectFile
-          $version = $proj.Project.PropertyGroup.Version
+          $version = $proj.Project.PropertyGroup.AppVersion
           
           if ([string]::IsNullOrEmpty($version)) {
-            # Fallback to AssemblyVersion if Version is not set
-            $version = $proj.Project.PropertyGroup.AssemblyVersion
+            # Fallback to AppVersionCode if Version is not set
+            $version = $proj.Project.PropertyGroup.AppVersionCode
           }
           
           if ([string]::IsNullOrEmpty($version)) {
