@@ -36,12 +36,12 @@ jobs:
           if ([string]::IsNullOrEmpty($version)) {
             # Default version if none found
             $version = "1.0.0"
-          } else {
-              # Trim whitespace from the version string
-              $version = $version.Trim()
           }
           
           $tagName = "v$version"
+            # Ensure the version and tag name are trimmed of whitespace
+          $tagName = $tagName.Trim()
+          
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
           echo "TAG_NAME=$tagName" >> $env:GITHUB_OUTPUT
           echo "Detected version: $version"
