@@ -102,11 +102,10 @@ jobs:
           xcopy /E /I updater ManifestToScale\updater\
           xcopy /E /I app ManifestToScale\app\
           
-          # Create a simple batch file to launch the updater
           echo @echo off > ManifestToScale\ManifestToScale.bat
           echo start .\updater\ManifestToScale.exe >> ManifestToScale\ManifestToScale.bat
           
-          7z a ManifestToScale-windows-x64.zip ManifestToScale\*
+          7z a ManifestToScale-${{ steps.get_version.outputs.TAG_NAME }}-windows-x64.zip ManifestToScale\*
         shell: cmd
 
       - name: Create GitHub Release

@@ -1,9 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+    <PropertyGroup>
+        <AppVersion>1.2.2</AppVersion>
+        <AppVersionCode>1.2.2</AppVersionCode>
+    </PropertyGroup>
+    
+    
     <PropertyGroup>
         <TargetFramework Condition="$([MSBuild]::IsOSPlatform('windows'))">net9.0-windows10.0.19041.0</TargetFramework>
         
-
         <OutputType>Exe</OutputType>
         <RootNamespace>FTG.MAUI</RootNamespace>
         <UseMaui>true</UseMaui>
@@ -34,11 +38,11 @@
         <ApplicationId>com.BryceStandley.ftg.maui</ApplicationId>
 
         <!-- Versions -->
-        <ApplicationDisplayVersion>1.2.1</ApplicationDisplayVersion>
-        <ApplicationVersion>1.2.1</ApplicationVersion>
-        <Version>1.2.1</Version>
-        <AssemblyVersion>1.2.1</AssemblyVersion>
-        <FileVersion>1.2.1</FileVersion>
+        <ApplicationDisplayVersion>$(AppVersion)</ApplicationDisplayVersion>
+        <ApplicationVersion>$(AppVersionCode)</ApplicationVersion>
+        <Version>$(AppVersion)</Version>
+        <AssemblyVersion>$(AppVersion)</AssemblyVersion>
+        <FileVersion>$(AppVersion)</FileVersion>
 
         <!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
         <WindowsPackageType>None</WindowsPackageType>
@@ -66,9 +70,15 @@
     <ItemGroup>
         <PackageReference Include="CommunityToolkit.Maui" Version="12.1.0" />
         <PackageReference Include="CommunityToolkit.Maui.Core" Version="12.1.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.7" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.81" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.7" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
+        <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
         <PackageReference Include="System.Private.Uri" Version="4.3.2" />
     </ItemGroup>
 

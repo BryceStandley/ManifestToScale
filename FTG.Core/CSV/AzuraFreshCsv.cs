@@ -69,6 +69,8 @@ public static class AzuraFreshCsv
     /// <returns>A list of AzuraFreshCsvRecord objects containing the data extracted from the Excel file.</returns>
     private static List<AzuraFreshCsvRecord> ReadRecordsFromXlsx(string filePath)
     {
+        ExcelPackage.License.SetNonCommercialPersonal("Bryce Standley");
+        
         var records = new List<AzuraFreshCsvRecord>();
         using var package = new ExcelPackage(new FileInfo(filePath));
         var worksheet = package.Workbook.Worksheets[0];

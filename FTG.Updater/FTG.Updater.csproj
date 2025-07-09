@@ -3,6 +3,8 @@
     <PropertyGroup>
         <TargetFramework Condition="$([MSBuild]::IsOSPlatform('windows'))">net9.0-windows10.0.19041.0</TargetFramework>
 
+        
+        
         <OutputType>Exe</OutputType>
         <RootNamespace>FTG.Updater</RootNamespace>
         <UseMaui>true</UseMaui>
@@ -62,9 +64,13 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.7" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.7" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
+        <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
     </ItemGroup>
 
 </Project>

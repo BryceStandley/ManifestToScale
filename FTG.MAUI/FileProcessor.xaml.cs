@@ -118,7 +118,7 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
         {
             var result = await FolderPicker.Default.PickAsync();
             
-            if (result != null && result.IsSuccessful)
+            if (result.IsSuccessful)
             {
                 OutputFolderPath = result.Folder.Path;
             }
@@ -169,12 +169,45 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
 
         try
         {
+            switch (Path.GetExtension(InputFilePath))
+            {
+                case ".pdf":
+                {
+                    GlobalLogger.LogInfo($"Processing PDF file: {InputFilePath}");
+                    OutputInfo =
+                        $"Processing PDF file: {InputFilePath}\n\nProcessing started at {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+                    break;
+                }
+                case ".csv":
+                {
+                    GlobalLogger.LogInfo($"Processing CSV file: {InputFilePath}");
+                    OutputInfo =
+                        $"Processing CSV file: {InputFilePath}\n\nProcessing started at {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+                    break;
+                }
+                case ".xlsx":
+                {
+                    GlobalLogger.LogInfo($"Processing Excel file: {InputFilePath}");
+                    OutputInfo =
+                        $"Processing Excel file: {InputFilePath}\n\nProcessing started at {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+                    break;
+                }
+                default:
+                {
+                    GlobalLogger.LogError($"Unsupported file type: {Path.GetExtension(InputFilePath)}");
+                    IsProcessing = false;
+                    throw new NotSupportedException($"Unsupported file type: {Path.GetExtension(InputFilePath)}, Please select a PDF, CSV, or Excel file.");
+                }
+                    
+            }
+            
             await ProcessFileAsync();
         }
         catch (Exception ex)
         {
             await DisplayAlert("Processing Error", $"An error occurred during processing: {ex.Message}", "OK");
             OutputInfo = $"Error: {ex.Message}\n\nProcessing failed at {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+            GlobalLogger.LogError($"Processing failed: {ex.Message}");
         }
         finally
         {
@@ -217,7 +250,7 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
             $"Output Scale Interface Folder: {scaleInterfaceFolderOutput}",
             ""
         };
-
+        GlobalLogger.LogInfo(string.Join("\n", info));
         OutputInfo = string.Join("\n", info);
 
         // Simulate processing with some actual file operations
@@ -227,12 +260,16 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
         {
             // Get file info
             var fileInfo = new FileInfo(InputFilePath);
+            GlobalLogger.LogInfo($"Input file size: {FormatFileSize(fileInfo.Length)}");
             info.Add($"Input file size: {FormatFileSize(fileInfo.Length)}");
+            GlobalLogger.LogInfo($"Input file name: {fileInfo.Name}");
+            GlobalLogger.LogInfo($"Last modified: {fileInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
             info.Add($"Last modified: {fileInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
             info.Add("");
 
             OutputInfo = string.Join("\n", info);
-            
+            GlobalLogger.LogInfo($"Processing started: {startTime:yyyy-MM-dd HH:mm:ss}");
+            GlobalLogger.LogInfo("Reading input file information...");
             info.Add("Reading manifest file content...");
             OutputInfo = string.Join("\n", info);
 
@@ -253,7 +290,7 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                     GlobalLogger.LogError("Failed to simplify PDF");
                     info.Add("❌ Failed to simplify PDF.");
                     OutputInfo = string.Join("\n", info);
-                    return;
+                    throw new Exception("Failed to simplify PDF");;
                 }
             
                 manifest = PdfProcessor.ConvertPdfToExcel($"{outputSimplifiedFilePath}.pdf", $"{outputSimplifiedFilePath}.xlsx");
@@ -263,15 +300,20 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                     info.Add("❌ Failed to convert manifest to Excel.");
                     OutputInfo = string.Join("\n", info);
                     GlobalLogger.LogError("Failed to convert manifest into Excel");
-                    return;
+                    throw new Exception("Failed to convert manifest into Excel");
                 }
                 else
                 {
+                    GlobalLogger.LogInfo($"Manifest read successfully");
                     info.Add($"Manifest read successfully");
+                    GlobalLogger.LogInfo($"   Manifest Date: {manifest.GetManifestDateString()}");
                     info.Add($"   Manifest Date: {manifest.GetManifestDateString()}");
+                    GlobalLogger.LogInfo($"   Total Orders: {manifest.GetTotalOrders()}");
                     info.Add($"   Total Orders: {manifest.GetTotalOrders()}");
+                    GlobalLogger.LogInfo($"   Total Crates: {manifest.GetTotalCrates()}");
                     info.Add($"   Total Crates: {manifest.GetTotalCrates()}");
                     info.Add("");
+                    GlobalLogger.LogInfo($"Manifest data exported to Excel in output folder");
                     info.Add($"Manifest data exported to Excel in output folder");
                     OutputInfo = string.Join("\n", info);
                 }
@@ -287,7 +329,7 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                     GlobalLogger.LogError("Failed to convert manifest to CSV");
                     info.Add("❌ Failed to convert manifest to CSV.");
                     OutputInfo = string.Join("\n", info);
-                    return;
+                    throw new Exception("Failed to convert manifest to CSV");
                 }
                 
                 
@@ -305,7 +347,7 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                     GlobalLogger.LogError("Failed to generate receipt XML");
                     info.Add("❌ Failed to generate receipt XML.");
                     OutputInfo = string.Join("\n", info);
-                    return;
+                    throw new Exception("Failed to generate receipt XML");;
                 }
                 
                 var shipmentXmlPath = Path.Combine(scaleInterfaceFolderOutput, $"{manifest.Company.Company}Shipments-{manifest.GetManifestDateString()}.shxml");
@@ -322,7 +364,7 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                     GlobalLogger.LogError("Failed to generate shipment XML");
                     info.Add("❌ Failed to generate shipment XML.");
                     OutputInfo = string.Join("\n", info);
-                    return;
+                    throw new Exception("Failed to generate shipment XML");
                 }
             }
             else if (fileInfo.Extension == ".csv" || fileInfo.Extension == ".xlsx")
@@ -334,15 +376,20 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                     info.Add("❌ Failed to read manifest.");
                     OutputInfo = string.Join("\n", info);
                     GlobalLogger.LogError("Failed to read manifest.");
-                    return;
+                    throw new Exception("Failed to read manifest");
                 }
                 else
                 {
+                    GlobalLogger.LogInfo($"Manifest read successfully");
                     info.Add($"Manifest read successfully");
+                    GlobalLogger.LogInfo($"   Manifest Date: {manifest.GetManifestDateString()}");
                     info.Add($"   Manifest Date: {manifest.GetManifestDate()}");
+                    GlobalLogger.LogInfo($"   Total Orders: {manifest.GetTotalOrders()}");
                     info.Add($"   Total Orders: {manifest.GetTotalOrders()}");
+                    GlobalLogger.LogInfo($"   Total Crates: {manifest.GetTotalCrates()}");
                     info.Add($"   Total Crates: {manifest.GetTotalCrates()}");
                     info.Add("");
+                    GlobalLogger.LogInfo($"Manifest data exported to Excel in output folder");
                     info.Add($"Manifest data exported to output folder");
                     OutputInfo = string.Join("\n", info);
                 }
@@ -361,7 +408,7 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                     GlobalLogger.LogError("Failed to generate receipt XML");
                     info.Add("❌ Failed to generate receipt XML.");
                     OutputInfo = string.Join("\n", info);
-                    return;
+                    throw new Exception("Failed to generate receipt XML");
                 }
                 
                 var shipmentXmlPath = Path.Combine(scaleInterfaceFolderOutput, $"{manifest.Company.Company}_Shipments-{manifest.GetManifestDateString()}.shxml");
@@ -378,16 +425,19 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                     GlobalLogger.LogError("Failed to generate shipment XML");
                     info.Add("❌ Failed to generate shipment XML.");
                     OutputInfo = string.Join("\n", info);
-                    return;
+                    throw new Exception("Failed to generate shipment XML");
                 }
             }
             
             var endTime = DateTime.Now;
             var duration = endTime - startTime;
             info.Add("");
+            GlobalLogger.LogInfo($"Processing completed: {endTime:yyyy-MM-dd HH:mm:ss}");
             info.Add($"Processing completed: {endTime:yyyy-MM-dd HH:mm:ss}");
+            GlobalLogger.LogInfo($"Total processing time: {duration.TotalSeconds:F1} seconds");
             info.Add($"Total processing time: {duration.TotalSeconds:F1} seconds");
             info.Add("");
+            GlobalLogger.LogInfo($"Processing completed successfully!");
             info.Add("✓ Processing completed successfully!");
 
             OutputInfo = string.Join("\n", info);
@@ -397,8 +447,8 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
         catch (Exception ex)
         {
             info.Add($"❌ Error during processing: {ex.Message}");
+            GlobalLogger.LogError($"Processing failed: {ex.Message}");
             OutputInfo = string.Join("\n", info);
-            throw;
         }
     }
 
@@ -408,15 +458,10 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
         {
             if (string.IsNullOrWhiteSpace(OutputFolderPath) || !Directory.Exists(OutputFolderPath))
             {
+                GlobalLogger.LogError("Output folder does not exist.");
                 await DisplayAlert("Error", "Output folder does not exist.", "OK");
-                return;
+                throw new DirectoryNotFoundException("Output folder does not exist.");
             }
-            
-            /*if (Directory.Exists(OutputFolderPath) && (string.IsNullOrWhiteSpace(_jobOutputFolder) || !Directory.Exists(_jobOutputFolder)))
-            {
-                await DisplayAlert("Error", "Job Output folder does not exist.", "OK");
-                return;
-            }*/
 
             // Open folder in file explorer
             if (_jobOutputFolder != null)
@@ -439,19 +484,18 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                 // Alternative method using Process.Start for desktop platforms
                 if (DeviceInfo.Platform == DevicePlatform.WinUI)
                 {
+                    GlobalLogger.LogError($"Failed to open output folder: {ex.Message}");
                     System.Diagnostics.Process.Start("explorer.exe", OutputFolderPath);
-                }
-                else if (DeviceInfo.Platform == DevicePlatform.macOS)
-                {
-                    System.Diagnostics.Process.Start("open", OutputFolderPath);
                 }
                 else
                 {
+                    GlobalLogger.LogError($"Failed to open output folder: {ex.Message}");
                     await DisplayAlert("Error", $"Cannot open folder: {ex.Message}", "OK");
                 }
             }
             catch (Exception ex2)
             {
+                GlobalLogger.LogError($"Failed to open output folder with fallback: {ex2.Message}");
                 await DisplayAlert("Error", $"Failed to open output folder: {ex2.Message}", "OK");
             }
         }
