@@ -8,6 +8,8 @@ riderModule.iml
 /FTG.API/uploads/
 /FTG.API/output/
 /FTG.API/complete/
+/publish
+
 
 /FTG.Debug.Email/appsettings.json
 /FTG.Debug.Email/bin/
