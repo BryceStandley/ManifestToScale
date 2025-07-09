@@ -38,6 +38,7 @@ jobs:
             $version = "1.0.0"
           }
           
+          $version = $version.Trim()
           $tagName = "v$version"
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
           echo "TAG_NAME=$tagName" >> $env:GITHUB_OUTPUT
