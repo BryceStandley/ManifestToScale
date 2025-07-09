@@ -104,7 +104,7 @@ jobs:
           mkdir ManifestToScale
           xcopy /E /I updater ManifestToScale\updater\
           xcopy /E /I app ManifestToScale\app\
-          xcopy /E /I FTG.MAUI/UserGuide.pdf ManifestToScale\UserGuide.pdf
+          xcopy FTG.MAUI/UserGuide.pdf ManifestToScale\UserGuide.pdf
           
           echo @echo off > ManifestToScale\ManifestToScale.bat
           echo start .\updater\ManifestToScale.exe >> ManifestToScale\ManifestToScale.bat
