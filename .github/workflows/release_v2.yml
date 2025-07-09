@@ -26,11 +26,11 @@ jobs:
           # Extract AppVersion from the main app project file
           $projectFile = "FTG.MAUI/FTG.MAUI.csproj"
           [xml]$proj = Get-Content $projectFile
-          $version = $proj.Project.PropertyGroup.AppVersion
+          $version = $proj.Project.PropertyGroup.AppVersion.Trim()
           
           if ([string]::IsNullOrEmpty($version)) {
             # Fallback to AppVersionCode if Version is not set
-            $version = $proj.Project.PropertyGroup.AppVersionCode
+            $version = $proj.Project.PropertyGroup.AppVersionCode.Trim()
           }
           
           if ([string]::IsNullOrEmpty($version)) {
@@ -38,7 +38,6 @@ jobs:
             $version = "1.0.0"
           }
           
-          $version = $version.Trim()
           $tagName = "v$version"
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
           echo "TAG_NAME=$tagName" >> $env:GITHUB_OUTPUT
