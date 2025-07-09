@@ -39,12 +39,12 @@ When you first launch Manifest To Scale, you'll see the main update application 
 
 ![win_updater.png](docs/images/win_updater.png)
 
-If no updates are found, an update fails or an update is completed successfully, 
+If no updates are found, an update fails, or an update is completed successfully, 
 the main application will be launched automatically with several key areas:
 
 **Main application window:**
 
-![win_maui_main.png](docs/Images/win_maui_main.png)
+![win_maui_main.png](docs/images/win_maui_main.png)
 
 ### Main Interface Elements
 
@@ -57,7 +57,7 @@ the main application will be launched automatically with several key areas:
 
 **Main interface with sections highlighted:**
 
-![win_maui_numbered.png](docs/Images/win_maui_numbered.png)
+![win_maui_numbered.png](docs/images/win_maui_numbered.png)
 
 ---
 
@@ -77,11 +77,11 @@ The selected file path will appear in the input field:
 
 **Input field with selected file:**
 
-![win_maui_input.png](docs/Images/win_maui_input.png)
+![win_maui_input.png](docs/images/win_maui_input.png)
 
-![win_maui_input_file.png](docs/Images/win_maui_input_file.png)
+![win_maui_input_file.png](docs/images/win_maui_input_file.png)
 
-### Step 2: Choose Output Folder
+### Step 2: Choose the Output Folder
 
 1. In the **Output Folder** section, click the **Browse** button
 2. Navigate to where you want your processed files saved
@@ -91,9 +91,9 @@ The selected file path will appear in the input field:
 **Note:** The output folder path will be remembered for future uses.
 
 **Folder selection dialog:**
-![win_maui_output.png](docs/Images/win_maui_output.png)
+![win_maui_output.png](docs/images/win_maui_output.png)
 
-![win_maui_output_folder.png](docs/Images/win_maui_output_folder.png)
+![win_maui_output_folder.png](docs/images/win_maui_output_folder.png)
 
 
 ### Step 3: Start Processing
@@ -104,7 +104,7 @@ The selected file path will appear in the input field:
 
 **Processing in progress:**
 
-![win_maui_processing.png](docs/Images/win_maui_processing.png)
+![win_maui_processing.png](docs/images/win_maui_processing.png)
 
 ### Step 4: Processing Complete
 
@@ -112,13 +112,13 @@ When processing is finished, you'll see a success message and detailed results:
 
 **Successful processing completion:**
 
-![win_maui_success.png](docs/Images/win_maui_success.png)
+![win_maui_success.png](docs/images/win_maui_success.png)
 
 **Successful processing output logs:**
 
-![win_maui_output_1.png](docs/Images/win_maui_output_1.png)
+![win_maui_output_1.png](docs/images/win_maui_output_1.png)
 
-![win_maui_output_2.png](docs/Images/win_maui_output_2.png)
+![win_maui_output_2.png](docs/images/win_maui_output_2.png)
 
 ---
 
@@ -134,7 +134,7 @@ PDF files are processed through the Fresh To Go workflow:
 
 **PDF processing results:**
 
-![win_maui_pdf_output.png](docs/Images/win_maui_pdf_output.png)
+![win_maui_pdf_output.png](docs/images/win_maui_pdf_output.png)
 
 ### CSV/XLSX Files (Azura Fresh Manifests)
 
@@ -146,7 +146,7 @@ CSV and Excel files are processed through the Azura Fresh workflow:
 
 **CSV/XLSX processing results**
 
-![win_maui_caf_output.png](docs/Images/win_maui_caf_output.png)
+![win_maui_caf_output.png](docs/images/win_maui_caf_output.png)
 
 ---
 
@@ -166,15 +166,15 @@ Output Folder/
 ```
 **PDF processing output files:**
 
-![win_maui_pdf.png](docs/Images/win_maui_pdf.png)
+![win_maui_pdf.png](docs/images/win_maui_pdf.png)
 
 **Scale interface files generated from PDF:**
 
-![win_maui_pdf_scale_interface.png](docs/Images/win_maui_pdf_scale_interface.png)
+![win_maui_pdf_scale_interface.png](docs/images/win_maui_pdf_scale_interface.png)
 
 **CSV/XLSX processing results**
 
-![win_maui_caf_scale_interface.png](docs/Images/win_maui_caf_scale_interface.png)
+![win_maui_caf_scale_interface.png](docs/images/win_maui_caf_scale_interface.png)
 
 ### Opening Output Files
 
@@ -221,7 +221,7 @@ If processing encounters issues, an error is noted in the output log:
 
 **Error message display:**
 
-![win_maui_error.png](docs/Images/win_maui_error.png)
+![win_maui_error.png](docs/images/win_maui_error.png)
 
 ### Log Files
 
@@ -229,13 +229,13 @@ All processing logs are saved in the output folder under `logs/` with datestamps
 
 **Log output folder:**
 
-![win_maui_log_folder.png](docs/Images/win_maui_log_folder.png)
+![win_maui_log_folder.png](docs/images/win_maui_log_folder.png)
 
 Each log file contains the output from the application and more detailed error messages if any issues occurred during processing.
 
 **Log file example:**
 
-![win_maui_log_file.png](docs/Images/win_maui_log_file.png)
+![win_maui_log_file.png](docs/images/win_maui_log_file.png)
 
 ---
 
@@ -249,7 +249,7 @@ Each log file contains the output from the application and more detailed error m
 
 **Please select an input file error message:**
 
-![win_maui_error_input.png](docs/Images/win_maui_error_input.png)
+![win_maui_error_input.png](docs/images/win_maui_error_input.png)
 
 #### Processing Fails
 **Problem**: The manifest file cannot be processed
@@ -257,7 +257,7 @@ Each log file contains the output from the application and more detailed error m
 
 **Processing failure with error details:**
 
-![win_maui_log_file.png](docs/Images/win_maui_log_file.png)
+![win_maui_log_file.png](docs/images/win_maui_log_file.png)
 
 ### File Format Issues
 
@@ -266,7 +266,7 @@ Only PDF, CSV, and XLSX files are supported. Other formats will cause errors.
 
 **Unsupported file type error:**
 
-![win_maui_error_unsupported.png](docs/Images/win_maui_error_unsupported.png)
+![win_maui_error_unsupported.png](docs/images/win_maui_error_unsupported.png)
 
 ---
 
