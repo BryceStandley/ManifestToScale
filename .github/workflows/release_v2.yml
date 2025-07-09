@@ -18,7 +18,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 9.0.x
 
       - name: Extract Version from Main App
         id: get_version
@@ -26,16 +26,20 @@ jobs:
           # Extract AppVersion from the main app project file
           $projectFile = "FTG.MAUI/FTG.MAUI.csproj"
           [xml]$proj = Get-Content $projectFile
-          $version = $proj.Project.PropertyGroup.AppVersion.Trim()
+          $version = $proj.Project.PropertyGroup.AppVersion
           
           if ([string]::IsNullOrEmpty($version)) {
             # Fallback to AppVersionCode if Version is not set
-            $version = $proj.Project.PropertyGroup.AppVersionCode.Trim()
+            $version = $proj.Project.PropertyGroup.AppVersionCode
           }
           
           if ([string]::IsNullOrEmpty($version)) {
             # Default version if none found
             $version = "1.0.0"
+          }
+          
+          if (![string]::IsNullOrEmpty($version)) {
+            $version = $version.Trim()
           }
           
           $tagName = "v$version"
