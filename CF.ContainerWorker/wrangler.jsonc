@@ -7,6 +7,9 @@
 	"observability": {
 		"enabled": true
 	},
+	"vars" : {
+		"IS_DEV": "false",
+	},
 	"dev": {
 		"enable_containers": false
 	},

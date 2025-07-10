@@ -17,6 +17,7 @@ riderModule.iml
 
 /CF.ContainerWorker/.wrangler/
 /CF.ContainerWorker/node_modules/
+/CF.ContainerWorker/.dev.vars/
 
 /CF.EmailWorker/.wrangler/
 /CF.EmailWorker/node_modules/

@@ -26,9 +26,11 @@ export default {
 				const file = formData.get('file'); // assuming the form field is named 'file'
 
 
-				if (!(file instanceof File) || (file.name.endsWith('.pdf') || file.name.endsWith('.csv') || file.name.endsWith('.xlsx'))) {
+
+				if (!(file instanceof File)) {
 					return new Response('Invalid file', { status: 400 });
 				}
+				cfLog("Received file:", file.name, "of type:", file.type);
 
 				const fname = file.name;
 				var fileType = '';
@@ -69,12 +71,16 @@ export default {
 			);
 		}
 
-		const url = new URL(request.url);
+		if(env.IS_DEV == "false")
+		{
+			const url = new URL(request.url);
 
-		if (url.pathname.startsWith("/api")) {
-			const containerInstance = getContainer(env.FTG_PDF_API);
-			return await containerInstance.fetch(request);
+			if (url.pathname.startsWith("/api")) {
+				const containerInstance = getContainer(env.FTG_PDF_API);
+				return await containerInstance.fetch(request);
 		}
+		}
+
 
 		return new Response("Not Found", { status: 404 });
 	},
