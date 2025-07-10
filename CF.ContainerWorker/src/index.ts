@@ -23,23 +23,35 @@ export default {
 		try {
 				let newRequest = request.clone();
 				const formData = await newRequest.formData();
-				const pdfFile = formData.get('file'); // assuming the form field is named 'file'
+				const file = formData.get('file'); // assuming the form field is named 'file'
 
 
-				if (!(pdfFile instanceof File) || pdfFile.type !== 'application/pdf') {
-					return new Response('Invalid PDF file', { status: 400 });
+				if (!(file instanceof File) || (file.name.endsWith('.pdf') || file.name.endsWith('.csv') || file.name.endsWith('.xlsx'))) {
+					return new Response('Invalid file', { status: 400 });
 				}
 
+				const fname = file.name;
+				var fileType = '';
+				var mimeType = file.type;
+				if(fname.endsWith('.pdf')) {
+					fileType = 'pdf';
+				} else if(fname.endsWith('.csv')) {
+					fileType = 'csv';
+				} else if(fname.endsWith('.xlsx')) {
+					fileType = 'xlsx';
+				}
+
+
 				// Convert file to array buffer
-				const pdfBuffer = await pdfFile.arrayBuffer();
+				const buffer = await file.arrayBuffer();
 
 				// Generate filename (use original name or create new one)
-				const filename = pdfFile.name || `pdf-${Date.now()}.pdf`;
+				const filename = file.name || `${Date.now()}.${fileType}`;
 
 				// Upload to R2
-				await env.PDF_BUCKET.put(filename, pdfBuffer, {
+				await env.PDF_BUCKET.put(filename, buffer, {
 						httpMetadata: {
-						contentType: 'application/pdf',
+						contentType: `${mimeType}`,
 						},
 					});
 

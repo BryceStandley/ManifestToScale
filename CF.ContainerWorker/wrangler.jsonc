@@ -22,7 +22,7 @@
 	"containers": [
 		{
 			"class_name": "FTG_PDF_API",
-			"image": "./Dockerfile",
+			"image": "../Dockerfile",
 			"max_instances": 5,
 			"name" : "ftg-pdf-api",
 

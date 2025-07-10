@@ -55,6 +55,7 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 		manifest._delivered = false;
 		manifest._lastError = '';
 		manifest._id = (await env.DB.prepare('SELECT COUNT(*) FROM "processed_manifests"').all()).results[0]['COUNT(*)'] + 1;
+		manifest.company = result.company || 'PER-CO-FTG'; // Default to FTG if not provided
 	}
 
 
@@ -108,7 +109,7 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 
 		if(delayed)
 		{
-			var res2 = await sendAcknowledgementEmail(env, toAddress, originalFile, manifest.ManifestDate);
+			var res2 = await sendAcknowledgementEmail(env, toAddress, originalFile, manifest.ManifestDate, manifest.company);
 			if (!res2 || res2.status !== 200 || res.message !== 'Email sent successfully') {
 				cfLog('email.ts','Error sending acknowledgement email:', res2);
 				return { message:'Failed to send acknowledgement email', status: 500 };
@@ -144,11 +145,12 @@ async function sendEmailFromMailgun(env, emailForm, emailType = 'response') {
 	}
 }
 
-async function sendAcknowledgementEmail(env, toAddress, originalFile, manifestDate) {
+async function sendAcknowledgementEmail(env, toAddress, originalFile, manifestDate, company) {
 	var acknowledgementEmails = env.ACKNOWLEDGEMENT_EMAILS?.toLowerCase().split(',') || [];
 	var manifest = new FreshToGoManifestRecord();
 	manifest.OriginalFilename = originalFile;
 	manifest.ManifestDate = manifestDate;
+	manifest.company = company;
 	var email =  new AcknowledgementEmail();
 	if(toAddress === 'bryce@vectorpixel.net')
 	{
@@ -215,9 +217,10 @@ async function sendErrorEmailFromMailgun(env, toAddress, message, originalFilena
 function convertApiResponseToFiles(apiResponse: ApiResponse): EmailAttachment[] {
 	const attachments: EmailAttachment[] = [];
 	const manifestDate = apiResponse.manifestDate;
-	const receiptId = 'Receipt-FTG-' + Utils.GetSimpleScaleDateString(manifestDate);
-	const shipmentId = 'Shipments-FTG-' + Utils.GetSimpleScaleDateString(manifestDate);
-	const baseName = 'PER-CO-FTG_';
+	const company = apiResponse.company === 'PER-CO-FTG' ? 'FTG' : 'CAF';
+	const receiptId = 'Receipt-' + company + '-' + Utils.GetSimpleScaleDateString(manifestDate);
+	const shipmentId = 'Shipments-' + company + '-' + Utils.GetSimpleScaleDateString(manifestDate);
+	const baseName = 'PER-CO-' + company + '_';
 	if (apiResponse.receiptXmlContent) {
 		//const receiptBase64 = btoa(apiResponse.receiptXmlContent);
 		attachments.push({

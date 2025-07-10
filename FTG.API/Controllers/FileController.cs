@@ -161,6 +161,7 @@ public class FileController(
                     manifestDate = xmlResults.ManifestDate,
                     totalOrders = xmlResults.Manifest.GetTotalOrders(),
                     totalCrates = xmlResults.Manifest.GetTotalCrates(),
+                    company = xmlResults.Manifest.Company.Company,
                     manifest = xmlResults.Manifest,
                     receiptXmlContent = xmlResults.ValidationResult.IsValid ? receiptXmlContent : string.Empty,
                     shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty
@@ -176,6 +177,7 @@ public class FileController(
                 manifestDate = xmlResults.ManifestDate,
                 totalOrders = xmlResults.Manifest.GetTotalOrders(),
                 totalCrates = xmlResults.Manifest.GetTotalCrates(),
+                company = xmlResults.Manifest.Company.Company,
                 manifest = xmlResults.Manifest,
                 receiptXmlContent = xmlResults.ValidationResult.IsValid ? receiptXmlContent : string.Empty,
                 shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty

@@ -25,6 +25,7 @@ type ApiResponse = {
 	manifestDate?: string;
 	totalOrders?: number;
 	totalCrates?: number;
+	company?: string;
 	manifest?: DotnetManifest;
 	receiptXmlContent?: string;
 	shipmentXmlContent?: string;
@@ -33,6 +34,7 @@ type ApiResponse = {
 type EmailAttachment = {
 	filename: string;
 	contentType: string;
+	fileType: string; // 'pdf', 'csv', 'xlsx', etc.
 	data: ArrayBuffer | string; // Use ArrayBuffer for binary data
 };
 

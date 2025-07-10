@@ -40,48 +40,79 @@ export default {
 				return;
 			}
 
-			const pdfAttachments: EmailAttachment[] = [];
+			const attachments: EmailAttachment[] = [];
 			if (parsedEmail.attachments.length === 0) {
-				cfLog('worker.ts','No PDF attachments found');
-				await sendErrorEmailFromMailgun(env, fromAddress, 'No PDF attachments found in your email.');
+				cfLog('worker.ts','No attachments found');
+				await sendErrorEmailFromMailgun(env, fromAddress, 'No attachments found in your email.');
 				return;
 			} else {
 				parsedEmail.attachments.forEach((attachment) => {
-					if (attachment.filename !== null && attachment.filename.toLowerCase().includes('.pdf')) {
-						var attachmentData = attachment.content;
-						pdfAttachments.push({
-							filename: attachment.filename,
-							data: attachmentData,
-							contentType: attachment.mimeType || 'application/pdf',
-						});
+					if (attachment.filename !== null && (attachment.filename.toLowerCase().includes('.pdf') || attachment.filename.toLowerCase().includes('.csv') || attachment.filename.toLowerCase().includes('.xlsx'))) {
+						var filename = attachment.filename.toLowerCase().split('.');
+						switch (filename[filename.length - 1]) {
+							case 'pdf':
+								cfLog('worker.ts',`Found PDF attachment: ${attachment.filename}`);
+								var attachmentData = attachment.content;
+									attachments.push({
+										filename: attachment.filename,
+										fileType: 'pdf',
+										data: attachmentData,
+										contentType: attachment.mimeType || 'application/pdf',
+									});
+								break;
+							case 'csv':
+								cfLog('worker.ts',`Found CSV attachment: ${attachment.filename}`);
+								var attachmentData = attachment.content;
+									attachments.push({
+										filename: attachment.filename,
+										fileType: 'csv',
+										data: attachmentData,
+										contentType: attachment.mimeType || 'text/csv',
+									});
+								break;
+							case 'xlsx':
+								cfLog('worker.ts',`Found XLSX attachment: ${attachment.filename}`);
+								var attachmentData = attachment.content;
+									attachments.push({
+										filename: attachment.filename,
+										fileType: 'xlsx',
+										data: attachmentData,
+										contentType: attachment.mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+									});
+								break;
+							default:
+								cfLog('worker.ts',`Found attachment with unsupported file type: ${attachment.filename}`);
+								return; // Skip unsupported file types
+						}
+
 					}
 				});
 			}
-			cfLog('worker.ts',`Found ${pdfAttachments.length} PDF attachment(s)`);
+			cfLog('worker.ts',`Found ${attachments.length} attachment(s)`);
 			const apiResponses: ApiResponse[] = [];
-			for (const pdf of pdfAttachments) {
+			for (const attachment of attachments) {
 				try {
-					const apiResponse = await sendToApi(env, pdf);
-					cfLog('worker.ts',`API response for ${pdf.filename}:`, apiResponse.message);
+					const apiResponse = await sendToApi(env, attachment);
+					cfLog('worker.ts',`API response for ${attachment.filename}:`, apiResponse.message);
 					if (!apiResponse || apiResponse.message !== 'success') {
-						originalFilename = pdf.filename;
-						throw new Error(`API call failed for ${pdf.filename}: ${apiResponse ? apiResponse.error : 'No response'}`);
+						originalFilename = attachment.filename;
+						throw new Error(`API call failed for ${attachment.filename}: ${apiResponse ? apiResponse.error : 'No response'}`);
 					}
-					apiResponse.originalFilename = pdf.filename;
+					apiResponse.originalFilename = attachment.filename;
 					apiResponses.push(apiResponse);
-					originalFilename = pdf.filename;
+					originalFilename = attachment.filename;
 				}
 				catch (error) {
-					cfLog('worker.ts',`Failed to process ${pdf.filename}:`, error);
+					cfLog('worker.ts',`Failed to process ${attachment.filename}:`, error);
 					apiResponses.push({
-						message: 'Unable to process PDF attachment',
+						message: 'Unable to process attachment',
 						error: error.message,
-						originalFilename: pdf.filename,
+						originalFilename: attachment.filename,
 					});
-					throw new Error(`Error processing PDF attachment: ${error.message}`);
+					throw new Error(`Error processing attachment: ${error.message}`);
 				}
 			}
-			cfLog('worker.ts',`Processed ${apiResponses.length} PDF attachment(s)`);
+			cfLog('worker.ts',`Processed ${apiResponses.length} attachment(s)`);
 			var res = await sendResponseEmailFromMailgun(env, fromAddress, apiResponses);
 			if (res.status === 200) {
 				cfLog('worker.ts',`Response email sent to ${fromAddress} with status: ${res.status} and message: ${res.message}`);
@@ -233,11 +264,13 @@ export default {
 	},
 };
 
-async function sendToApi(env, pdfAttachment) : Promise<ApiResponse> {
+async function sendToApi(env, attachment: EmailAttachment) : Promise<ApiResponse> {
 	const formData = new FormData();
-	const pdfBlob = new Blob([pdfAttachment.data], { type: 'application/pdf' });
-	formData.append('file', pdfBlob, pdfAttachment.filename);
-	const response = await fetch(env.IS_LOCAL ? env.DEV_API_ENDPOINT : env.API_ENDPOINT, {
+	const blob = new Blob([attachment.data], { type: attachment.contentType || 'application/pdf' });
+	formData.append('file', blob, attachment.filename);
+	var endpoint = (env.IS_LOCAL ? env.DEV_API_ENDPOINT : env.API_ENDPOINT) + (attachment.fileType === 'pdf' ? '/ftg/upload' : '/caf/upload');
+	cfLog('worker.ts',`Sending attachment ${attachment.filename} to API endpoint: ${endpoint}`);
+	const response = await fetch(endpoint, {
 		method: 'POST',
 		headers: {
 			Authorization: `Bearer ${env.API_TOKEN}`,

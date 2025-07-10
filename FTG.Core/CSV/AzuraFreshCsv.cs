@@ -69,44 +69,144 @@ public static class AzuraFreshCsv
     /// <returns>A list of AzuraFreshCsvRecord objects containing the data extracted from the Excel file.</returns>
     private static List<AzuraFreshCsvRecord> ReadRecordsFromXlsx(string filePath)
     {
-        ExcelPackage.License.SetNonCommercialPersonal("Bryce Standley");
-        
-        var records = new List<AzuraFreshCsvRecord>();
-        using var package = new ExcelPackage(new FileInfo(filePath));
-        var worksheet = package.Workbook.Worksheets[0];
-        if (worksheet == null)
+        try
         {
-            GlobalLogger.LogError("Worksheet not found in the Excel file.");
+            ExcelPackage.License.SetNonCommercialPersonal("Bryce Standley");
+            
+            var records = new List<AzuraFreshCsvRecord>();
+            using var package = new ExcelPackage(new FileInfo(filePath));
+            var worksheet = package.Workbook.Worksheets[0];
+            if (worksheet == null)
+            {
+                GlobalLogger.LogError("Worksheet not found in the Excel file.");
+                return records;
+            }
+
+            var expectedHeaders = new[] { "Ship Date", "Store Num", "Store Name", "PO #", "Cust #", "Order #", "Inv #", "Qty", "Crates" };
+            var headersIndex = FindXlsxHeaderRow(expectedHeaders, worksheet);
+            GlobalLogger.LogInfo($"Header row data found at index {headersIndex}");
+            if (headersIndex == -1)
+            {
+                GlobalLogger.LogError("Header row not found in the Excel file.");
+                return records;
+            }
+            
+            var totalsRowIndex = FindXlsxTotalsRow(worksheet);
+            if (totalsRowIndex != -1)
+            {
+                GlobalLogger.LogInfo($"Totals row found at index {totalsRowIndex}");
+                // If totals row is found, we can stop reading further
+                worksheet = worksheet.Cells[1, 1, totalsRowIndex - 1, worksheet.Dimension.Columns].Worksheet;
+            }
+            else
+            {
+                GlobalLogger.LogInfo("No totals row found, reading all records.");
+            }
+            
+            var rowCount = worksheet.Dimension.Rows;
+            for (var row = headersIndex + 1; row < rowCount; row++)
+            {
+                
+                    var record = new AzuraFreshCsvRecord
+                    {
+                        Date = DateOnly.FromDateTime(worksheet.Cells[row, 1].GetValue<DateTime>()),
+                        StoreId = worksheet.Cells[row, 2].GetValue<string>() ?? "",
+                        CustomerName = worksheet.Cells[row, 3].GetValue<string>() ?? "",
+                        PurchaseOrderNo = worksheet.Cells[row, 4].GetValue<string>() ?? "",
+                        CustomerPoNo = worksheet.Cells[row, 5].GetValue<string>() ?? "",
+                        OrderNumber = worksheet.Cells[row, 6].GetValue<string>() ?? "",
+                        InvoiceNo = worksheet.Cells[row, 7].GetValue<string>() ?? "",
+                        UnitQty = worksheet.Cells[row, 8].GetValue<int>(),
+                        CrateQty = worksheet.Cells[row, 9].GetValue<int>()
+                    };
+                    records.Add(record);
+                
+                
+                
+            }
+
+            GlobalLogger.LogInfo($"Excel file read successfully: {filePath}");
+            GlobalLogger.LogInfo($"Total records read: {records.Count}");
             return records;
         }
-
-        var rowCount = worksheet.Dimension.Rows;
-        for (var row = 3; row <= rowCount; row++)
+        catch (Exception e)
         {
-            var record = new AzuraFreshCsvRecord
+            GlobalLogger.LogError($"Error reading record: ", e);
+            throw;
+        }
+    }
+
+    private static int FindXlsxTotalsRow(ExcelWorksheet worksheet)
+    {
+        for (int row = 1; row <= worksheet.Dimension.Rows; row++)
+        {
+            var fields = new List<string>();
+            for (int col = 1; col <= worksheet.Dimension.Columns; col++)
             {
-                Date = DateOnly.FromDateTime(worksheet.Cells[row, 1].GetValue<DateTime>()),
-                InvoiceNo = worksheet.Cells[row, 2].GetValue<string>() ?? "",
-                CustomerPoNo = worksheet.Cells[row, 3].GetValue<string>() ?? "",
-                StoreId = worksheet.Cells[row, 4].GetValue<string>() ?? "",
-                CustomerName = worksheet.Cells[row, 5].GetValue<string>() ?? "",
-                UnitQty = worksheet.Cells[row, 6].GetValue<int>(),
-                CrateQty = worksheet.Cells[row, 7].GetValue<int>()
-            };
-            records.Add(record);
+                fields.Add(worksheet.Cells[row, col].Text.Trim());
+            }
+            
+            int emptyFieldCount = fields.Take(fields.Count - 1).Count(f => string.IsNullOrWhiteSpace(f));
+            string lastField = fields.LastOrDefault() ?? string.Empty;
+
+            // Criteria for total row:
+            // 1. Most fields (50%+) are empty
+            // 2. Last field contains a numeric value
+            bool mostFieldsEmpty = (double)emptyFieldCount / (fields.Count - 1) >= 0.5;
+            bool lastFieldHasValue = !string.IsNullOrWhiteSpace(lastField);
+            bool lastFieldIsNumeric = decimal.TryParse(lastField.Replace("$", "").Replace(",", ""), out _);
+	        
+            if(mostFieldsEmpty && lastFieldHasValue && lastFieldIsNumeric)
+                return row; // Return 1-based index of the total row
+        }
+        return -1;
+    }
+    
+    private static int FindXlsxHeaderRow(string[] expectedHeaders, ExcelWorksheet worksheet)
+    {
+        for (int row = 1; row <= worksheet.Dimension.Rows; row++)
+        {
+            var headerRow = new List<string>();
+            for (int col = 1; col <= worksheet.Dimension.Columns; col++)
+            {
+                headerRow.Add(worksheet.Cells[row, col].Text.Trim());
+            }
+
+            if (expectedHeaders.All(header => headerRow.Any(h => string.Equals(h, header, StringComparison.OrdinalIgnoreCase))))
+            {
+                return row; // Return 1-based index of the header row
+            }
         }
 
-        GlobalLogger.LogInfo($"Excel file read successfully: {filePath}");
-        GlobalLogger.LogInfo($"Total records read: {records.Count}");
-        return records;
+        throw new InvalidOperationException("Header row not found in Excel file");
     }
 
     private static List<AzuraFreshCsvRecord> ReadRecordsFromCsv(string filePath)
     {
+        var expectedHeaders = new[] { "Ship Date", "Store Num", "Store Name", "PO #", "Cust #", "Order #", "Inv #", "Qty", "Crates" };
+        int headerRowIndex = FindHeaderRow(filePath, expectedHeaders);
+        GlobalLogger.LogInfo($"Header row data found at index {headerRowIndex}");
+        bool shouldStopReading = false;
+        
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
             HasHeaderRecord = true,
-            ShouldSkipRecord = args => args.Row.Parser.Row <= 2 // Skip the first two rows
+            ShouldSkipRecord = args => 
+            {
+                // Skip rows before header
+                if (args.Row.Parser.Row <= headerRowIndex)
+                    return true;
+                
+                // Check if this looks like a total/summary row
+                if (IsTotalRow(args.Row))
+                {
+                    GlobalLogger.LogInfo($"Totals row found at index {args.Row.Parser.Row}");
+                    shouldStopReading = true;
+                    return true; // Skip this row
+                }
+            
+                return shouldStopReading;
+            }
         };
 
         using var reader = new StreamReader(filePath);
@@ -115,6 +215,74 @@ public static class AzuraFreshCsv
         csv.Context.RegisterClassMap<AzuraFreshCsvRecordMap>();
         var records = csv.GetRecords<AzuraFreshCsvRecord>();
         return records.ToList();
+    }
+    
+    
+    private static bool IsTotalRow(IReaderRow row)
+    {
+        try
+        {
+            var fields = new List<string>();
+            for (int i = 0; i < row.Parser.Count; i++)
+            {
+                fields.Add(row.GetField(i)?.Trim() ?? string.Empty);
+            }
+	        
+            // Check if most fields are empty and last field contains a number (total)
+            int emptyFieldCount = fields.Take(fields.Count - 1).Count(f => string.IsNullOrWhiteSpace(f));
+            string lastField = fields.LastOrDefault() ?? string.Empty;
+	        
+            // Criteria for total row:
+            // 1. Most fields (50%+) are empty
+            // 2. Last field contains a numeric value
+            bool mostFieldsEmpty = (double)emptyFieldCount / (fields.Count - 1) >= 0.5;
+            bool lastFieldHasValue = !string.IsNullOrWhiteSpace(lastField);
+            bool lastFieldIsNumeric = decimal.TryParse(lastField.Replace("$", "").Replace(",", ""), out _);
+	        
+            return mostFieldsEmpty && lastFieldHasValue && lastFieldIsNumeric;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
+    private static int FindHeaderRow(string filePath, string[] expectedHeaders)
+    {
+        using var reader = new StreamReader(filePath);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+    
+        int rowIndex = 0;
+    
+        while (csv.Read())
+        {
+            rowIndex++;
+            if (ContainsExpectedHeaders(csv, expectedHeaders))
+            {
+                return rowIndex - 1; // Return 0-based index for skipping
+            }
+        }
+    
+        throw new InvalidOperationException("Header row not found in CSV file");
+    }
+
+    private static bool ContainsExpectedHeaders(CsvReader csv, string[] expectedHeaders)
+    {
+        try
+        {
+            var currentRowFields = new List<string>();
+            for (int i = 0; i < csv.Parser.Count; i++)
+            {
+                currentRowFields.Add(csv.GetField(i)?.Trim() ?? string.Empty);
+            }
+            return expectedHeaders.All(header => 
+                currentRowFields.Any(field => 
+                    string.Equals(field, header, StringComparison.OrdinalIgnoreCase)));
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private class FlexibleDateOnlyConverter : DefaultTypeConverter
