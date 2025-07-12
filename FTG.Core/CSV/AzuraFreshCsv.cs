@@ -54,14 +54,26 @@ public static class AzuraFreshCsv
     /// <returns>A list of FreshToGoOrder objects constructed from the provided records.</returns>
     private static List<FreshToGoOrder> CreateOrdersFromRecords(List<AzuraFreshCsvRecord> records)
     {
-        return records.Select(record => new FreshToGoOrder(record.StoreId, record.CustomerName, record.PurchaseOrderNo, record.OrderNumber, record.PurchaseOrderNo != string.Empty
+        var orders = new List<FreshToGoOrder>();
+        foreach (var record in records)
+        {
+            var order = new FreshToGoOrder(record.StoreId, record.CustomerName, record.PurchaseOrderNo, record.OrderNumber, record.PurchaseOrderNo != string.Empty
                     ? record.PurchaseOrderNo
                     : record.OrderNumber, // Assuming InvoiceNo is used as OrderNumber
                 record.InvoiceNo != string.Empty
                     ? record.InvoiceNo
                     : record.PurchaseOrderNo, // Assuming InvoiceNo is used as InventoryNumber
-                record.UnitQty, record.CrateQty) { OrderDate = record.Date })
-            .ToList();
+                record.UnitQty, record.CrateQty) { OrderDate = record.Date };
+            
+            if((order.PoNumber == String.Empty && order.OrderNumber == String.Empty) || order.CrateQuantity == 0 || order.Quantity == 0)
+            {
+                GlobalLogger.LogWarning($"Order with no PO or Order number or has 0 crates found for StoreId: {record.StoreId}, CustomerName: {record.CustomerName}, Date: {record.Date}, Excluding from manifest.");
+                continue;
+            }
+            orders.Add(order);
+        }
+        
+        return orders;
     }
 
     /// Reads records from an Excel file and converts them into a list of AzuraFreshCsvRecord objects.
@@ -155,8 +167,11 @@ public static class AzuraFreshCsv
             bool mostFieldsEmpty = (double)emptyFieldCount / (fields.Count - 1) >= 0.5;
             bool lastFieldHasValue = !string.IsNullOrWhiteSpace(lastField);
             bool lastFieldIsNumeric = decimal.TryParse(lastField.Replace("$", "").Replace(",", ""), out _);
+            bool hasDateInRow = DateOnly.TryParse(fields[0], out _);
+            bool hasPoNumber = fields[3].Contains('V');
+            bool hasOrderNumber = int.TryParse(fields[5], out _);
 	        
-            if(mostFieldsEmpty && lastFieldHasValue && lastFieldIsNumeric)
+            if(mostFieldsEmpty && lastFieldHasValue && lastFieldIsNumeric && !hasDateInRow && !hasPoNumber && !hasOrderNumber)
                 return row; // Return 1-based index of the total row
         }
         return -1;
@@ -199,14 +214,12 @@ public static class AzuraFreshCsv
                     return true;
                 
                 // Check if this looks like a total/summary row
-                if (IsTotalRow(args.Row))
-                {
-                    GlobalLogger.LogInfo($"Totals row found at index {args.Row.Parser.Row}");
-                    shouldStopReading = true;
-                    return true; // Skip this row
-                }
-            
-                return shouldStopReading;
+                if (!IsTotalRow(args.Row)) return shouldStopReading;
+                
+                GlobalLogger.LogInfo($"Totals row found at index {args.Row.Parser.Row}");
+                shouldStopReading = true;
+                return true; // Skip this row
+
             }
         };
 
@@ -224,7 +237,8 @@ public static class AzuraFreshCsv
         try
         {
             var fields = new List<string>();
-            for (int i = 0; i < row.Parser.Count; i++)
+            // Read the first 8 fields (0-7) and trim them - We know AzuraFresh CSV has 8 fields and shouldn't have more
+            for (int i = 0; i < 9; i++)
             {
                 fields.Add(row.GetField(i)?.Trim() ?? string.Empty);
             }
@@ -234,13 +248,19 @@ public static class AzuraFreshCsv
             string lastField = fields.LastOrDefault() ?? string.Empty;
 	        
             // Criteria for total row:
-            // 1. Most fields (50%+) are empty
+            // 1. Most fields (40%+) are empty
             // 2. Last field contains a numeric value
-            bool mostFieldsEmpty = (double)emptyFieldCount / (fields.Count - 1) >= 0.5;
+            // 3. First field doesnt contains a date
+            // 4. No PO number in row
+            // 5. No Order number in row
+            bool hasDateInRow = DateOnly.TryParse(fields[0], out _);
+            bool hasPoNumber = fields[3].Contains('V');
+            bool hasOrderNumber = int.TryParse(fields[5], out _);
+            bool mostFieldsEmpty = (double)emptyFieldCount / (fields.Count - 1) >= 0.4;
             bool lastFieldHasValue = !string.IsNullOrWhiteSpace(lastField);
             bool lastFieldIsNumeric = decimal.TryParse(lastField.Replace("$", "").Replace(",", ""), out _);
 	        
-            return mostFieldsEmpty && lastFieldHasValue && lastFieldIsNumeric;
+            return mostFieldsEmpty && lastFieldHasValue && lastFieldIsNumeric && !hasDateInRow && !hasPoNumber && !hasOrderNumber;
         }
         catch
         {

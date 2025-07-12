@@ -14,49 +14,49 @@ public static class GlobalLogger
             _logger = loggerFactory.CreateLogger("GlobalLogger");
         }
 
-        public static void LogInfo(
+        public static string? LogInfo(
             string message,
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0)
         {
-            LogMessage(LogLevel.Information, message, filePath, lineNumber);
+            return LogMessage(LogLevel.Information, message, filePath, lineNumber);
         }
 
-        public static void LogWarning(
+        public static string? LogWarning(
             string message,
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0)
         {
-            LogMessage(LogLevel.Warning, message, filePath, lineNumber);
+            return LogMessage(LogLevel.Warning, message, filePath, lineNumber);
         }
 
-        public static void LogError(
-            string message,
-            Exception? exception = null,
-            [CallerFilePath] string filePath = "",
-            [CallerLineNumber] int lineNumber = 0)
-        {
-            LogMessage(LogLevel.Error, message, filePath, lineNumber, exception);
-        }
-
-        public static void LogDebug(
-            string message,
-            [CallerFilePath] string filePath = "",
-            [CallerLineNumber] int lineNumber = 0)
-        {
-            LogMessage(LogLevel.Debug, message, filePath, lineNumber);
-        }
-
-        public static void LogCritical(
+        public static string? LogError(
             string message,
             Exception? exception = null,
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0)
         {
-            LogMessage(LogLevel.Critical, message, filePath, lineNumber, exception);
+            return LogMessage(LogLevel.Error, message, filePath, lineNumber, exception);
         }
 
-        private static void LogMessage(
+        public static string? LogDebug(
+            string message,
+            [CallerFilePath] string filePath = "",
+            [CallerLineNumber] int lineNumber = 0)
+        {
+            return LogMessage(LogLevel.Debug, message, filePath, lineNumber);
+        }
+
+        public static string? LogCritical(
+            string message,
+            Exception? exception = null,
+            [CallerFilePath] string filePath = "",
+            [CallerLineNumber] int lineNumber = 0)
+        {
+            return LogMessage(LogLevel.Critical, message, filePath, lineNumber, exception);
+        }
+
+        private static string? LogMessage(
             LogLevel level,
             string message,
             string filePath,
@@ -66,7 +66,7 @@ public static class GlobalLogger
             if (_logger == null)
             {
                 Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [UNINITIALIZED] {GetFileName(filePath)}:{lineNumber} - {message}");
-                return;
+                return null;
             }
 
             var fileName = GetFileName(filePath);
@@ -76,20 +76,22 @@ public static class GlobalLogger
             {
                 case LogLevel.Information:
                     _logger.LogInformation(logMessage);
-                    break;
+                    return logMessage;
                 case LogLevel.Warning:
                     _logger.LogWarning(logMessage);
-                    break;
+                    return logMessage;
                 case LogLevel.Error:
                     _logger.LogError(exception, logMessage);
-                    break;
+                    return logMessage;
                 case LogLevel.Debug:
                     _logger.LogDebug(logMessage);
-                    break;
+                    return logMessage;
                 case LogLevel.Critical:
                     _logger.LogCritical(exception, logMessage);
-                    break;
+                    return logMessage;
             }
+
+            return null;
         }
 
         private static string GetFileName(string filePath)

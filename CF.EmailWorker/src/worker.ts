@@ -268,7 +268,7 @@ async function sendToApi(env, attachment: EmailAttachment) : Promise<ApiResponse
 	const formData = new FormData();
 	const blob = new Blob([attachment.data], { type: attachment.contentType || 'application/pdf' });
 	formData.append('file', blob, attachment.filename);
-	var endpoint = (env.IS_LOCAL ? env.DEV_API_ENDPOINT : env.API_ENDPOINT) + (attachment.fileType === 'pdf' ? '/ftg/upload' : '/caf/upload');
+	var endpoint = (env.IS_LOCAL === "true" ? env.DEV_API_ENDPOINT : env.API_ENDPOINT) + (attachment.fileType === 'pdf' ? '/ftg/upload' : '/caf/upload');
 	cfLog('worker.ts',`Sending attachment ${attachment.filename} to API endpoint: ${endpoint}`);
 	const response = await fetch(endpoint, {
 		method: 'POST',

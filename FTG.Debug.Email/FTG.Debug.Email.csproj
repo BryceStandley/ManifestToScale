@@ -65,28 +65,4 @@
         <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
     </ItemGroup>
 
-    <ItemGroup>
-      <MauiPlatformSpecificFolder Remove="Platforms\Android\" />
-      <MauiPlatformSpecificFolder Remove="Platforms\iOS\" />
-      <MauiPlatformSpecificFolder Remove="Platforms\MacCatalyst\" />
-      <MauiPlatformSpecificFolder Remove="Platforms\Tizen\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="appsettings.json" />
-      <None Remove="obj\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <MauiXaml Remove="obj\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <MauiCss Remove="obj\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="obj\**" />
-    </ItemGroup>
-
 </Project>

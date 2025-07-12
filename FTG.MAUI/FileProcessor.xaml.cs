@@ -252,25 +252,19 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
         };
         GlobalLogger.LogInfo(string.Join("\n", info));
         OutputInfo = string.Join("\n", info);
-
-        // Simulate processing with some actual file operations
-        await Task.Delay(1000); // Simulate initial setup
-
+        
         try
         {
             // Get file info
             var fileInfo = new FileInfo(InputFilePath);
-            GlobalLogger.LogInfo($"Input file size: {FormatFileSize(fileInfo.Length)}");
-            info.Add($"Input file size: {FormatFileSize(fileInfo.Length)}");
-            GlobalLogger.LogInfo($"Input file name: {fileInfo.Name}");
-            GlobalLogger.LogInfo($"Last modified: {fileInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
-            info.Add($"Last modified: {fileInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
+            info.Add(GlobalLogger.LogInfo($"Input file size: {FormatFileSize(fileInfo.Length)}")!);
+            info.Add(GlobalLogger.LogInfo($"Input file name: {fileInfo.Name}")!);
+            info.Add(GlobalLogger.LogInfo($"Last modified: {fileInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}")!);
             info.Add("");
 
             OutputInfo = string.Join("\n", info);
-            GlobalLogger.LogInfo($"Processing started: {startTime:yyyy-MM-dd HH:mm:ss}");
-            GlobalLogger.LogInfo("Reading input file information...");
-            info.Add("Reading manifest file content...");
+            info.Add(GlobalLogger.LogInfo($"Processing started: {startTime:yyyy-MM-dd HH:mm:ss}")!);
+            info.Add(GlobalLogger.LogInfo("Reading input file information...")!);
             OutputInfo = string.Join("\n", info);
 
             FreshToGoManifest? manifest = null;
@@ -279,16 +273,14 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
             {
                 if (PdfProcessor.SimplifyPdf(InputFilePath, $"{outputSimplifiedFilePath}.pdf"))
                 {
-                    GlobalLogger.LogInfo($"PDF simplified successfully: {outputSimplifiedFileName}.pdf");
                     info.Add("");
-                    info.Add($"Manifest PDF simplified successfully");
+                    info.Add(GlobalLogger.LogInfo($"PDF simplified successfully: {outputSimplifiedFileName}.pdf")!);
                     info.Add("");
                     OutputInfo = string.Join("\n", info);
                 }
                 else
                 {
-                    GlobalLogger.LogError("Failed to simplify PDF");
-                    info.Add("❌ Failed to simplify PDF.");
+                    info.Add(GlobalLogger.LogError("❌ Failed to simplify PDF.")!);
                     OutputInfo = string.Join("\n", info);
                     throw new Exception("Failed to simplify PDF");;
                 }
@@ -297,37 +289,28 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                 
                 if (manifest == null)
                 {
-                    info.Add("❌ Failed to convert manifest to Excel.");
                     OutputInfo = string.Join("\n", info);
-                    GlobalLogger.LogError("Failed to convert manifest into Excel");
+                    info.Add(GlobalLogger.LogError("❌ Failed to convert manifest to Excel.")!);
                     throw new Exception("Failed to convert manifest into Excel");
                 }
-                else
-                {
-                    GlobalLogger.LogInfo($"Manifest read successfully");
-                    info.Add($"Manifest read successfully");
-                    GlobalLogger.LogInfo($"   Manifest Date: {manifest.GetManifestDateString()}");
-                    info.Add($"   Manifest Date: {manifest.GetManifestDateString()}");
-                    GlobalLogger.LogInfo($"   Total Orders: {manifest.GetTotalOrders()}");
-                    info.Add($"   Total Orders: {manifest.GetTotalOrders()}");
-                    GlobalLogger.LogInfo($"   Total Crates: {manifest.GetTotalCrates()}");
-                    info.Add($"   Total Crates: {manifest.GetTotalCrates()}");
-                    info.Add("");
-                    GlobalLogger.LogInfo($"Manifest data exported to Excel in output folder");
-                    info.Add($"Manifest data exported to Excel in output folder");
-                    OutputInfo = string.Join("\n", info);
-                }
-            
+
+                info.Add(GlobalLogger.LogInfo($"Manifest read successfully")!);
+                info.Add(GlobalLogger.LogInfo($"   Manifest Date: {manifest.GetManifestDateString()}")!);
+                info.Add(GlobalLogger.LogInfo($"   Total Orders: {manifest.GetTotalOrders()}")!);
+                info.Add(GlobalLogger.LogInfo($"   Total Crates: {manifest.GetTotalCrates()}")!);
+                info.Add("");
+                info.Add(GlobalLogger.LogInfo($"Manifest data exported to Excel in output folder")!);
+                OutputInfo = string.Join("\n", info);
+
                 if(ManifestToScale.ConvertManifestToCsv(manifest, $"{outputSimplifiedFilePath}.csv"))
                 {
-                    GlobalLogger.LogInfo($"Manifest CSV generated successfully: {outputSimplifiedFilePath}.csv");
-                    info.Add($"Manifest data exported as CSV in output folder");
+                    info.Add(GlobalLogger.LogInfo($"Manifest CSV generated successfully: {outputSimplifiedFilePath}.csv")!);
+                    info.Add(GlobalLogger.LogInfo($"Manifest data exported as CSV in output folder")!);
                     OutputInfo = string.Join("\n", info);
                 }
                 else
                 {
-                    GlobalLogger.LogError("Failed to convert manifest to CSV");
-                    info.Add("❌ Failed to convert manifest to CSV.");
+                    info.Add(GlobalLogger.LogError("❌ Failed to convert manifest to CSV.")!);
                     OutputInfo = string.Join("\n", info);
                     throw new Exception("Failed to convert manifest to CSV");
                 }
@@ -336,16 +319,13 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                 var receiptXmlPath = Path.Combine(scaleInterfaceFolderOutput, $"{manifest.Company.Company}_Receipt-{manifest.GetManifestDateString()}.rcxml");
                 if(ManifestToScale.GenerateReceiptFromTemplate(manifest, receiptXmlPath))
                 {
-                    GlobalLogger.LogInfo($"Receipt XML generated successfully: {receiptXmlPath}");
-                    info.Add("");
-                    info.Add($"Manifest receipt for Scale generated successfully");
-                    info.Add($"Scale rcxml file saved to scale interface output folder");
+                    info.Add(GlobalLogger.LogInfo($"Receipt XML generated successfully: {receiptXmlPath}")!);
+                    info.Add(GlobalLogger.LogInfo($"Scale rcxml file saved to scale interface output folder")!);
                     OutputInfo = string.Join("\n", info);
                 }
                 else
                 {
-                    GlobalLogger.LogError("Failed to generate receipt XML");
-                    info.Add("❌ Failed to generate receipt XML.");
+                    info.Add(GlobalLogger.LogError("❌ Failed to generate receipt XML.")!);
                     OutputInfo = string.Join("\n", info);
                     throw new Exception("Failed to generate receipt XML");;
                 }
@@ -353,16 +333,13 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                 var shipmentXmlPath = Path.Combine(scaleInterfaceFolderOutput, $"{manifest.Company.Company}Shipments-{manifest.GetManifestDateString()}.shxml");
                 if(ManifestToScale.GenerateShipmentFromTemplate(manifest, shipmentXmlPath))
                 {
-                    GlobalLogger.LogInfo($"Shipment XML generated successfully: {shipmentXmlPath}");
-                    info.Add("");
-                    info.Add($"Manifest shipments for Scale generated successfully");
-                    info.Add($"Scale shxml file saved to scale interface output folder");
+                    info.Add(GlobalLogger.LogInfo($"Shipment XML generated successfully: {shipmentXmlPath}")!);
+                    info.Add(GlobalLogger.LogInfo($"Scale shxml file saved to scale interface output folder")!);
                     OutputInfo = string.Join("\n", info);
                 }
                 else
                 {
-                    GlobalLogger.LogError("Failed to generate shipment XML");
-                    info.Add("❌ Failed to generate shipment XML.");
+                    info.Add(GlobalLogger.LogError("❌ Failed to generate shipment XML.")!);
                     OutputInfo = string.Join("\n", info);
                     throw new Exception("Failed to generate shipment XML");
                 }
@@ -378,35 +355,25 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                     GlobalLogger.LogError("Failed to read manifest.");
                     throw new Exception("Failed to read manifest");
                 }
-                else
-                {
-                    GlobalLogger.LogInfo($"Manifest read successfully");
-                    info.Add($"Manifest read successfully");
-                    GlobalLogger.LogInfo($"   Manifest Date: {manifest.GetManifestDateString()}");
-                    info.Add($"   Manifest Date: {manifest.GetManifestDate()}");
-                    GlobalLogger.LogInfo($"   Total Orders: {manifest.GetTotalOrders()}");
-                    info.Add($"   Total Orders: {manifest.GetTotalOrders()}");
-                    GlobalLogger.LogInfo($"   Total Crates: {manifest.GetTotalCrates()}");
-                    info.Add($"   Total Crates: {manifest.GetTotalCrates()}");
-                    info.Add("");
-                    GlobalLogger.LogInfo($"Manifest data exported to Excel in output folder");
-                    info.Add($"Manifest data exported to output folder");
-                    OutputInfo = string.Join("\n", info);
-                }
-                
+
+                info.Add(GlobalLogger.LogInfo($"Manifest read successfully")!);
+                info.Add(GlobalLogger.LogInfo($"   Manifest Date: {manifest.GetManifestDateString()}")!);
+                info.Add(GlobalLogger.LogInfo($"   Total Orders: {manifest.GetTotalOrders()}")!);
+                info.Add(GlobalLogger.LogInfo($"   Total Crates: {manifest.GetTotalCrates()}")!);
+                info.Add("");
+                info.Add(GlobalLogger.LogInfo($"Manifest data exported to Excel in output folder")!);
+                OutputInfo = string.Join("\n", info);
+
                 var receiptXmlPath = Path.Combine(scaleInterfaceFolderOutput, $"{manifest.Company.Company}_Receipt-{manifest.GetManifestDateString()}.rcxml");
                 if(ManifestToScale.GenerateReceiptFromTemplate(manifest, receiptXmlPath))
                 {
-                    GlobalLogger.LogInfo($"Receipt XML generated successfully: {receiptXmlPath}");
-                    info.Add("");
-                    info.Add($"Manifest receipt for Scale generated successfully");
-                    info.Add($"Scale rcxml file saved to scale interface output folder");
+                    info.Add(GlobalLogger.LogInfo($"Receipt XML generated successfully: {receiptXmlPath}")!);
+                    info.Add(GlobalLogger.LogInfo($"Scale rcxml file saved to scale interface output folder")!);
                     OutputInfo = string.Join("\n", info);
                 }
                 else
                 {
-                    GlobalLogger.LogError("Failed to generate receipt XML");
-                    info.Add("❌ Failed to generate receipt XML.");
+                    info.Add(GlobalLogger.LogError("❌ Failed to generate receipt XML.")!);
                     OutputInfo = string.Join("\n", info);
                     throw new Exception("Failed to generate receipt XML");
                 }
@@ -414,16 +381,13 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
                 var shipmentXmlPath = Path.Combine(scaleInterfaceFolderOutput, $"{manifest.Company.Company}_Shipments-{manifest.GetManifestDateString()}.shxml");
                 if(ManifestToScale.GenerateShipmentFromTemplate(manifest, shipmentXmlPath))
                 {
-                    GlobalLogger.LogInfo($"Shipment XML generated successfully: {shipmentXmlPath}");
-                    info.Add("");
-                    info.Add($"Manifest shipments for Scale generated successfully");
-                    info.Add($"Scale shxml file saved to scale interface output folder");
+                    info.Add(GlobalLogger.LogInfo($"Shipment XML generated successfully: {shipmentXmlPath}")!);
+                    info.Add(GlobalLogger.LogInfo($"Scale shxml file saved to scale interface output folder")!);
                     OutputInfo = string.Join("\n", info);
                 }
                 else
                 {
-                    GlobalLogger.LogError("Failed to generate shipment XML");
-                    info.Add("❌ Failed to generate shipment XML.");
+                    info.Add(GlobalLogger.LogError("❌ Failed to generate shipment XML.")!);
                     OutputInfo = string.Join("\n", info);
                     throw new Exception("Failed to generate shipment XML");
                 }
@@ -432,13 +396,10 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
             var endTime = DateTime.Now;
             var duration = endTime - startTime;
             info.Add("");
-            GlobalLogger.LogInfo($"Processing completed: {endTime:yyyy-MM-dd HH:mm:ss}");
-            info.Add($"Processing completed: {endTime:yyyy-MM-dd HH:mm:ss}");
-            GlobalLogger.LogInfo($"Total processing time: {duration.TotalSeconds:F1} seconds");
-            info.Add($"Total processing time: {duration.TotalSeconds:F1} seconds");
+            info.Add(GlobalLogger.LogInfo($"Processing completed: {endTime:yyyy-MM-dd HH:mm:ss}")!);
+            info.Add(GlobalLogger.LogInfo($"Total processing time: {duration.TotalSeconds:F1} seconds")!);
             info.Add("");
-            GlobalLogger.LogInfo($"Processing completed successfully!");
-            info.Add("✓ Processing completed successfully!");
+            info.Add(GlobalLogger.LogInfo($"Processing completed successfully!")!);
 
             OutputInfo = string.Join("\n", info);
 
@@ -446,8 +407,7 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            info.Add($"❌ Error during processing: {ex.Message}");
-            GlobalLogger.LogError($"Processing failed: {ex.Message}");
+            info.Add(GlobalLogger.LogError($"❌ Error during processing: {ex.Message}")!);
             OutputInfo = string.Join("\n", info);
         }
     }

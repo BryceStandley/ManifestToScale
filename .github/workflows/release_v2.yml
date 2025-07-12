@@ -106,8 +106,8 @@ jobs:
           xcopy /E /I app ManifestToScale\app\
           xcopy ..\FTG.MAUI\UserGuide.pdf ManifestToScale\
           
-          echo @echo off > ManifestToScale\ManifestToScale.bat
-          echo start .\updater\ManifestToScale.exe >> ManifestToScale\ManifestToScale.bat
+          echo @echo off > ManifestToScale\ManifestToScale.txt
+          echo start .\updater\ManifestToScale.exe >> ManifestToScale\ManifestToScale.txt
           
           7z a ManifestToScale-${{ steps.get_version.outputs.TAG_NAME }}-windows-x64.zip ManifestToScale\*
         shell: cmd
@@ -127,7 +127,8 @@ jobs:
             ### Installation
             1. Download `ManifestToScale-${{ steps.get_version.outputs.TAG_NAME }}-windows-x64.zip`
             2. Extract to your desired location
-            3. Run `ManifestToScale.bat` to start the application
+            3. Rename `ManifestToScale.txt` to `ManifestToScale.bat`
+            4. Run `ManifestToScale.bat` to start the application
             
             ### Files
             - `ManifestToScale-${{ steps.get_version.outputs.TAG_NAME }}-windows-x64.zip` - Complete application package

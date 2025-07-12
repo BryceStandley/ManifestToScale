@@ -12,9 +12,9 @@
 	"API_ENDPOINT": "https://cf.ftgapi.vectorpixel.net/api/files",
 	"ALLOWED_SENDERS": "bryce@vectorpixel.net,jandakot.inbound@costagroup.com.au,ned.cecic@costagroup.com.au,darren.sutcliffe@costagroup.com.au,cassandra.sansiveri@costagroup.com.au",
 	"ACKNOWLEDGEMENT_EMAILS": "ned.cecic@costagroup.com.au,darren.sutcliffe@costagroup.com.au,cassandra.sansiveri@costagroup.com.au",
-	"IS_LOCAL": false,
-	"SKIP_DB_CHECK": false,
-	"SKIP_EMAIL_SEND": false
+	"IS_LOCAL": "false",
+	"SKIP_DB_CHECK": "false",
+	"SKIP_EMAIL_SEND": "false"
 	},
 	"observability": {
 		"enabled": true

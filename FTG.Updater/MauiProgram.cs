@@ -20,6 +20,11 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
+        if (Application.Current != null)
+        {
+            Application.Current.UserAppTheme = AppTheme.Dark;
+        }
+        
         return builder.Build();
     }
     

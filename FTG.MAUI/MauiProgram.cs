@@ -37,7 +37,7 @@ public static class MauiProgram
                 path: Path.Combine(logDirectory, "mts-.log"),
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 7,
-                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+                outputTemplate: "[{Level:u4}] {Message:lj}{NewLine}{Exception}")
             .WriteTo.Console()
             .CreateLogger();
 
@@ -52,6 +52,11 @@ public static class MauiProgram
 
         var app = builder.Build();
         GlobalLogger.Initialize(app.Services);
+        
+        if (Application.Current != null)
+        {
+            Application.Current.UserAppTheme = AppTheme.Dark;
+        }
 
         return app;
     }
