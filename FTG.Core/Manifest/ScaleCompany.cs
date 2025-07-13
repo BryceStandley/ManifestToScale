@@ -9,7 +9,7 @@ public class ScaleCompany
     public string VendorName { get; } = "FRESH TO GO FOODS-853540";
     public string VendorReceiptPrefix { get; } = "FTG/";
     
-    public static readonly ScaleCompany AzuraFresh = new("PER-CO-CAF", "856946", "Azura Fresh WA Pty Ltd", "CAF/");
+    public static readonly ScaleCompany AzuraFresh = new("PER-CO-CAF", "856946", "AZURA FRESH WA PTY LTD", "CAF/");
     [UsedImplicitly] public static readonly ScaleCompany FreshToGo = new ("PER-CO-FTG", "853540", "FRESH TO GO FOODS-853540", "FTG/");
 
     public ScaleCompany() { }

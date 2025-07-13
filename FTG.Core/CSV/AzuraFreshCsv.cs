@@ -220,7 +220,9 @@ public static class AzuraFreshCsv
                 shouldStopReading = true;
                 return true; // Skip this row
 
-            }
+            },
+            PrepareHeaderForMatch = args => args.Header?.Trim() ?? string.Empty,
+            GetDynamicPropertyName = args => (args.FieldIndex < 9 ? args.FieldIndex.ToString() : null) ?? string.Empty
         };
 
         using var reader = new StreamReader(filePath);
