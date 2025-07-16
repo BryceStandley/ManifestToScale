@@ -48,12 +48,12 @@ public static class Process
         return xml;
     }
     
-    public static XmlExportResults ExportCafFiles(IConfig config, string filePath, string fileName)
+    public static async Task<XmlExportResults> ExportCafFiles(IConfig config, string filePath, string fileName)
     {
         var inputFile = Path.Combine(filePath, fileName);
         var finalFile = Path.Join(config.GetFinishedPath(), Path.GetFileNameWithoutExtension(fileName));
 
-        var manifest = AzuraFreshCsv.ConvertToManifest(inputFile);
+        var manifest = await AzuraFreshCsv.ConvertToManifest(inputFile);
 
         if (manifest == null) return new XmlExportResults();
 

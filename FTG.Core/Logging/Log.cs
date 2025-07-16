@@ -5,7 +5,9 @@ using Microsoft.Extensions.Logging;
 namespace FTG.Core.Logging;
 
 public static class GlobalLogger
-    {
+{
+    public static event Action<string>? OnMessageLogged;
+        
         private static ILogger? _logger;
 
         public static void Initialize(IServiceProvider serviceProvider)
@@ -19,7 +21,10 @@ public static class GlobalLogger
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0)
         {
-            return LogMessage(LogLevel.Information, message, filePath, lineNumber);
+            var logMessage = LogMessage(LogLevel.Information, message, filePath, lineNumber);
+            if (logMessage != null) OnMessageLogged?.Invoke(logMessage);
+            return logMessage;
+            
         }
 
         public static string? LogWarning(
@@ -27,7 +32,9 @@ public static class GlobalLogger
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0)
         {
-            return LogMessage(LogLevel.Warning, message, filePath, lineNumber);
+            var logMessage = LogMessage(LogLevel.Warning, message, filePath, lineNumber);
+            if (logMessage != null) OnMessageLogged?.Invoke(logMessage);
+            return logMessage;
         }
 
         public static string? LogError(
@@ -36,7 +43,9 @@ public static class GlobalLogger
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0)
         {
-            return LogMessage(LogLevel.Error, message, filePath, lineNumber, exception);
+            var logMessage = LogMessage(LogLevel.Error, message, filePath, lineNumber, exception);
+            if (logMessage != null) OnMessageLogged?.Invoke(logMessage);
+            return logMessage;
         }
 
         public static string? LogDebug(
@@ -44,7 +53,9 @@ public static class GlobalLogger
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0)
         {
-            return LogMessage(LogLevel.Debug, message, filePath, lineNumber);
+            var logMessage = LogMessage(LogLevel.Debug, message, filePath, lineNumber);
+            if (logMessage != null) OnMessageLogged?.Invoke(logMessage);
+            return logMessage;
         }
 
         public static string? LogCritical(
@@ -53,7 +64,9 @@ public static class GlobalLogger
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0)
         {
-            return LogMessage(LogLevel.Critical, message, filePath, lineNumber, exception);
+            var logMessage = LogMessage(LogLevel.Critical, message, filePath, lineNumber, exception);
+            if (logMessage != null) OnMessageLogged?.Invoke(logMessage);
+            return logMessage;
         }
 
         private static string? LogMessage(

@@ -9,30 +9,45 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/files")]
-public class FileController(
-    IConfiguration aspConfiguration,
-    IWebHostEnvironment environment,
-    IAuth auth,
-    IConfig config)
-    : ControllerBase
+public class FileController : ControllerBase
 {
+    private readonly IConfiguration _aspConfiguration;
+    private readonly IWebHostEnvironment _environment;
+    private readonly IAuth _auth;
+    private readonly IConfig _config;
+    public FileController(IConfiguration aspConfiguration, IWebHostEnvironment environment, IAuth auth, IConfig config)
+    {
+        _aspConfiguration = aspConfiguration;
+        _environment = environment;
+        _auth = auth;
+        _config = config;
+        GlobalLogger.OnMessageLogged += OnMessageLogged;
+    }
+
+    private void OnMessageLogged(string message)
+    {
+        //Console.WriteLine(message);
+    }
+    
     [HttpPost("ftg/upload")]
     public async Task<IActionResult> UploadFile(IFormFile? file)
     {
         try
         {
-            if (!auth.IsAuthenticated(Request) && !environment.IsDevelopment())
+            if (!_auth.IsAuthenticated(Request) && !_environment.IsDevelopment())
             {
+                GlobalLogger.LogWarning("Invalid authentication key");
                 return Unauthorized("Invalid authentication key");
             }
             
             if (file == null || file.Length == 0)
             {
+                GlobalLogger.LogWarning("No file uploaded");
                 return BadRequest("No file uploaded");
             }
 
             // Create an uploads directory if it doesn't exist
-            var uploadsPath = Path.Combine(environment.ContentRootPath, "uploads");
+            var uploadsPath = Path.Combine(_environment.ContentRootPath, "uploads");
             if (!Directory.Exists(uploadsPath))
             {
                 Directory.CreateDirectory(uploadsPath);
@@ -51,7 +66,7 @@ public class FileController(
             GlobalLogger.LogInfo($"File saved: {filePath}");
 
             // Process the file and export XML
-            var xmlResults = Process.ExportXmlFiles(config, uploadsPath, fileName);
+            var xmlResults = Process.ExportXmlFiles(_config, uploadsPath, fileName);
             // ReSharper disable once RedundantAssignment
             var receiptXmlContent = string.Empty;
             // ReSharper disable once RedundantAssignment
@@ -67,7 +82,7 @@ public class FileController(
                 shipmentXmlContent = await reader.ReadToEndAsync();
             }
             
-            var shouldCleanup = aspConfiguration.GetValue<bool>("FileCleanup:Enabled");
+            var shouldCleanup = _aspConfiguration.GetValue<bool>("FileCleanup:Enabled");
             if (!shouldCleanup)
                 return Ok(new
                 {
@@ -81,7 +96,7 @@ public class FileController(
                     shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty
                 });
             
-            var daysToKeep = aspConfiguration.GetValue<int>("FileCleanup:DaysToKeep");
+            var daysToKeep = _aspConfiguration.GetValue<int>("FileCleanup:DaysToKeep");
             FileCleanup.CleanupFiles(uploadsPath, daysToKeep);
             FileCleanup.CleanupFiles(Path.Join(uploadsPath, "../", "output"), daysToKeep);
             GlobalLogger.LogInfo($"Cleanup completed. Files older than {daysToKeep} days removed.");
@@ -111,7 +126,7 @@ public class FileController(
     {
         try
         {
-            if (!auth.IsAuthenticated(Request) && !environment.IsDevelopment())
+            if (!_auth.IsAuthenticated(Request) && !_environment.IsDevelopment())
             {
                 GlobalLogger.LogWarning("Invalid authentication key");
                 return Unauthorized("Invalid authentication key");
@@ -125,7 +140,7 @@ public class FileController(
 
             // Generate unique filename to avoid conflicts
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            var filePath = Path.Combine(config.GetUploadsPath(), fileName);
+            var filePath = Path.Combine(_config.GetUploadsPath(), fileName);
 
             // Save file to disk
             await using (var stream = new FileStream(filePath, FileMode.Create))
@@ -135,7 +150,15 @@ public class FileController(
             }
             
             // Process the file
-            var xmlResults = Process.ExportCafFiles(config, config.GetUploadsPath(), fileName);
+            var xmlResults = await Process.ExportCafFiles(_config, _config.GetUploadsPath(), fileName);
+            
+            GlobalLogger.LogInfo($"Manifest read successfully");
+            GlobalLogger.LogInfo($"   Manifest Date: {xmlResults.Manifest.GetManifestDate()}");
+            GlobalLogger.LogInfo($"   Total Orders: {xmlResults.Manifest.GetTotalOrders()}");
+            GlobalLogger.LogInfo($"   Total Crates: {xmlResults.Manifest.GetTotalCrates()}");
+            
+            
+            
             // ReSharper disable once RedundantAssignment
             var receiptXmlContent = string.Empty;
             // ReSharper disable once RedundantAssignment
@@ -152,7 +175,7 @@ public class FileController(
             }
             
             // Perform file cleanup if enabled
-            var shouldCleanup = aspConfiguration.GetValue<bool>("FileCleanup:Enabled");
+            var shouldCleanup = _aspConfiguration.GetValue<bool>("FileCleanup:Enabled");
             if (!shouldCleanup)
                 return Ok(new
                 {
@@ -166,9 +189,9 @@ public class FileController(
                     receiptXmlContent = xmlResults.ValidationResult.IsValid ? receiptXmlContent : string.Empty,
                     shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty
                 });
-            var daysToKeep = aspConfiguration.GetValue<int>("FileCleanup:DaysToKeep");
-            FileCleanup.CleanupFiles(config.GetUploadsPath(), daysToKeep);
-            FileCleanup.CleanupFiles(config.GetOutputPath(), daysToKeep);
+            var daysToKeep = _aspConfiguration.GetValue<int>("FileCleanup:DaysToKeep");
+            FileCleanup.CleanupFiles(_config.GetUploadsPath(), daysToKeep);
+            FileCleanup.CleanupFiles(_config.GetOutputPath(), daysToKeep);
             GlobalLogger.LogInfo($"Cleanup completed. Files older than {daysToKeep} days removed.");
             return Ok(new
             {

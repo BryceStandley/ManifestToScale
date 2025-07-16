@@ -5,14 +5,16 @@ using System.Globalization;
 public class FreshToGoOrder
 {
     public DateOnly OrderDate { get; init; } = DateOnly.FromDateTime(DateTime.Today);
-    public string StoreNumber { get; }
-    public string StoreName { get; }
-    public string PoNumber { get; }
-    public string CustomerNumber { get; }
-    public string OrderNumber { get;  }
-    public string InvoiceNumber { get; }
-    public int Quantity { get; }
-    public int CrateQuantity { get; }
+    public string StoreNumber { get; init; } = string.Empty;
+    public string StoreName { get; init; }= string.Empty;
+    public string PoNumber { get; init; } = string.Empty;
+    public string CustomerNumber { get; init; } = string.Empty;
+    public string OrderNumber { get; init;  } = string.Empty;
+    public string InvoiceNumber { get; init; } = string.Empty;
+    public int Quantity { get; init; } = 0;
+    public int CrateQuantity { get; init; } = 0;
+    
+    public FreshToGoOrder() { }
     
     public FreshToGoOrder(string storeNumber, string storeName, string poNumber, string customerNumber, string orderNumber, string invoiceNumber, int quantity, int crateQuantity)
     {
@@ -61,7 +63,7 @@ public class FreshToGoManifest
     
     public ScaleCompany Company { get; init; } = new();
 
-    private List<FreshToGoOrder> Orders { get; } = [];
+    public List<FreshToGoOrder> Orders { get; } = [];
 
     private int TotalOrders { get; }
 

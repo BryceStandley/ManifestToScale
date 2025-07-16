@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
@@ -13,20 +14,27 @@ namespace FTG.Core.CSV;
 
 public static class AzuraFreshCsv
 {
+    
+    private static readonly Dictionary<string, byte[]> CsvCache = new();
+    
     /// Converts a file containing order records into a FreshToGoManifest object.
     /// <param name="filePath">The path to the file containing the order records, either in CSV or XLSX format.</param>
     /// <returns>
     ///     A FreshToGoManifest object containing the processed orders and metadata, or null if the file is invalid or an
     ///     error occurs during processing.
     /// </returns>
-    public static FreshToGoManifest? ConvertToManifest(string filePath)
+    public static async Task<FreshToGoManifest?> ConvertToManifest(string filePath)
     {
         if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
             GlobalLogger.LogError("CSV file not found: " + filePath);
 
         try
         {
-            var records = filePath.EndsWith(".xlsx") ? ReadRecordsFromXlsx(filePath) : ReadRecordsFromCsv(filePath);
+            await EnsureCsvCachedAsync(filePath);
+            
+            var records = ReadRecordsFromCsv(filePath);
+            
+            //var records = filePath.EndsWith(".xlsx") ? ReadRecordsFromXlsx(filePath) : ReadRecordsFromCsv(filePath);
             if (records.Count == 0)
             {
                 GlobalLogger.LogError("No records found in file.");
@@ -47,6 +55,35 @@ public static class AzuraFreshCsv
             GlobalLogger.LogError("Error reading file", e);
             return null;
         }
+    }
+    
+    private static async Task EnsureCsvCachedAsync(string filePath)
+    {
+        if (CsvCache.ContainsKey(filePath))
+            return;
+
+        var extension = Path.GetExtension(filePath).ToLowerInvariant();
+        
+        switch (extension)
+        {
+            case ".csv":
+                CsvCache[filePath] = await File.ReadAllBytesAsync(filePath);
+                break;
+            case ".xlsx":
+            {
+                using var csvStream = await ConvertXlsxToCsvStreamAsync(filePath);
+                CsvCache[filePath] = ((MemoryStream)csvStream)?.ToArray() ?? throw new InvalidOperationException();
+                break;
+            }
+        }
+    }
+    
+    private static CsvReader CreateCachedCsvReader(string filePath, CsvConfiguration? config = null)
+    {
+        var csvBytes = CsvCache[filePath];
+        var stream = new MemoryStream(csvBytes);
+        var reader = new StreamReader(stream);
+        return new CsvReader(reader, config ?? new CsvConfiguration(CultureInfo.InvariantCulture));
     }
 
     /// Creates a list of FreshToGoOrder objects from a list of AzuraFreshCsvRecord objects.
@@ -76,126 +113,50 @@ public static class AzuraFreshCsv
         return orders;
     }
 
-    /// Reads records from an Excel file and converts them into a list of AzuraFreshCsvRecord objects.
-    /// <param name="filePath">The file path of the Excel file to read the records from.</param>
-    /// <returns>A list of AzuraFreshCsvRecord objects containing the data extracted from the Excel file.</returns>
-    private static List<AzuraFreshCsvRecord> ReadRecordsFromXlsx(string filePath)
+    private static async Task<Stream?> ConvertXlsxToCsvStreamAsync(string filePath)
     {
         try
         {
             ExcelPackage.License.SetNonCommercialPersonal("Bryce Standley");
             
-            var records = new List<AzuraFreshCsvRecord>();
             using var package = new ExcelPackage(new FileInfo(filePath));
             var worksheet = package.Workbook.Worksheets[0];
             if (worksheet == null)
             {
                 GlobalLogger.LogError("Worksheet not found in the Excel file.");
-                return records;
+                return null;
             }
 
-            var expectedHeaders = new[] { "Ship Date", "Store Num", "Store Name", "PO #", "Cust #", "Order #", "Inv #", "Qty", "Crates" };
-            var headersIndex = FindXlsxHeaderRow(expectedHeaders, worksheet);
-            GlobalLogger.LogInfo($"Header row data found at index {headersIndex}");
-            if (headersIndex == -1)
+            var csvContent = new StringBuilder();
+            var rowCount = worksheet?.Dimension.Rows ?? 0;
+            var colCount = worksheet?.Dimension.Columns ?? 0;
+
+            for (int row = 1; row <= rowCount; row++)
             {
-                GlobalLogger.LogError("Header row not found in the Excel file.");
-                return records;
-            }
-            
-            var totalsRowIndex = FindXlsxTotalsRow(worksheet);
-            if (totalsRowIndex != -1)
-            {
-                GlobalLogger.LogInfo($"Totals row found at index {totalsRowIndex}");
-                // If totals row is found, we can stop reading further
-                worksheet = worksheet.Cells[1, 1, totalsRowIndex - 1, worksheet.Dimension.Columns].Worksheet;
-            }
-            else
-            {
-                GlobalLogger.LogInfo("No totals row found, reading all records.");
-            }
-            
-            var rowCount = worksheet.Dimension.Rows;
-            for (var row = headersIndex + 1; row < rowCount; row++)
-            {
+                var values = new List<string>();
                 
-                    var record = new AzuraFreshCsvRecord
+                for (int col = 1; col <= colCount; col++)
+                {
+                    var cellValue = worksheet?.Cells[row, col].Value?.ToString() ?? "";
+                    if (cellValue.Contains(',') || cellValue.Contains('"') || cellValue.Contains('\n'))
                     {
-                        Date = DateOnly.FromDateTime(worksheet.Cells[row, 1].GetValue<DateTime>()),
-                        StoreId = worksheet.Cells[row, 2].GetValue<string>() ?? "",
-                        CustomerName = worksheet.Cells[row, 3].GetValue<string>() ?? "",
-                        PurchaseOrderNo = worksheet.Cells[row, 4].GetValue<string>() ?? "",
-                        CustomerPoNo = worksheet.Cells[row, 5].GetValue<string>() ?? "",
-                        OrderNumber = worksheet.Cells[row, 6].GetValue<string>() ?? "",
-                        InvoiceNo = worksheet.Cells[row, 7].GetValue<string>() ?? "",
-                        UnitQty = worksheet.Cells[row, 8].GetValue<int>(),
-                        CrateQty = worksheet.Cells[row, 9].GetValue<int>()
-                    };
-                    records.Add(record);
+                        cellValue = $"\"{cellValue.Replace("\"", "\"\"")}\"";
+                    }
                 
-                
-                
+                    values.Add(cellValue);
+                }
+                csvContent.AppendLine(string.Join(",", values));
             }
-
-            GlobalLogger.LogInfo($"Excel file read successfully: {filePath}");
-            GlobalLogger.LogInfo($"Total records read: {records.Count}");
-            return records;
+            
+            var csvBytes = Encoding.UTF8.GetBytes(csvContent.ToString());
+            return new MemoryStream(csvBytes);
         }
         catch (Exception e)
         {
-            GlobalLogger.LogError($"Error reading record: ", e);
+            GlobalLogger.LogError($"Converting XLSX file to CSV stream failed with error: {e}");
             throw;
         }
     }
-
-    private static int FindXlsxTotalsRow(ExcelWorksheet worksheet)
-    {
-        for (int row = 1; row <= worksheet.Dimension.Rows; row++)
-        {
-            var fields = new List<string>();
-            for (int col = 1; col <= worksheet.Dimension.Columns; col++)
-            {
-                fields.Add(worksheet.Cells[row, col].Text.Trim());
-            }
-            
-            int emptyFieldCount = fields.Take(fields.Count - 1).Count(f => string.IsNullOrWhiteSpace(f));
-            string lastField = fields.LastOrDefault() ?? string.Empty;
-
-            // Criteria for total row:
-            // 1. Most fields (50%+) are empty
-            // 2. Last field contains a numeric value
-            bool mostFieldsEmpty = (double)emptyFieldCount / (fields.Count - 1) >= 0.5;
-            bool lastFieldHasValue = !string.IsNullOrWhiteSpace(lastField);
-            bool lastFieldIsNumeric = decimal.TryParse(lastField.Replace("$", "").Replace(",", ""), out _);
-            bool hasDateInRow = DateOnly.TryParse(fields[0], out _);
-            bool hasPoNumber = fields[3].Contains('V');
-            bool hasOrderNumber = int.TryParse(fields[5], out _);
-	        
-            if(mostFieldsEmpty && lastFieldHasValue && lastFieldIsNumeric && !hasDateInRow && !hasPoNumber && !hasOrderNumber)
-                return row; // Return 1-based index of the total row
-        }
-        return -1;
-    }
-    
-    private static int FindXlsxHeaderRow(string[] expectedHeaders, ExcelWorksheet worksheet)
-    {
-        for (int row = 1; row <= worksheet.Dimension.Rows; row++)
-        {
-            var headerRow = new List<string>();
-            for (int col = 1; col <= worksheet.Dimension.Columns; col++)
-            {
-                headerRow.Add(worksheet.Cells[row, col].Text.Trim());
-            }
-
-            if (expectedHeaders.All(header => headerRow.Any(h => string.Equals(h, header, StringComparison.OrdinalIgnoreCase))))
-            {
-                return row; // Return 1-based index of the header row
-            }
-        }
-
-        throw new InvalidOperationException("Header row not found in Excel file");
-    }
-
     
     private static List<AzuraFreshCsvRecord> ReadRecordsFromCsv(string filePath)
     {
@@ -224,15 +185,13 @@ public static class AzuraFreshCsv
             PrepareHeaderForMatch = args => args.Header?.Trim() ?? string.Empty,
             GetDynamicPropertyName = args => (args.FieldIndex < 9 ? args.FieldIndex.ToString() : null) ?? string.Empty
         };
-
-        using var reader = new StreamReader(filePath);
-        using var csv = new CsvReader(reader, config);
+        
+        using var csv = CreateCachedCsvReader(filePath, config);
 
         csv.Context.RegisterClassMap<AzuraFreshCsvRecordMap>();
         var records = csv.GetRecords<AzuraFreshCsvRecord>();
         return records.ToList();
     }
-    
     
     private static bool IsTotalRow(IReaderRow row)
     {
@@ -272,8 +231,7 @@ public static class AzuraFreshCsv
     
     private static int FindHeaderRow(string filePath, string[] expectedHeaders)
     {
-        using var reader = new StreamReader(filePath);
-        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        using var csv = CreateCachedCsvReader(filePath);
     
         int rowIndex = 0;
     

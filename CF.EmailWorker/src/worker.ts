@@ -40,6 +40,12 @@ export default {
 				return;
 			}
 
+			if(parsedEmail.subject.includes("config=skip_db"))
+			{
+				cfLog('worker.ts', 'Email subject contains config=skip_db, skipping DB processing');
+				env.SKIP_DB_CHECK = "true";
+			}
+
 			const attachments: EmailAttachment[] = [];
 			if (parsedEmail.attachments.length === 0) {
 				cfLog('worker.ts','No attachments found');
