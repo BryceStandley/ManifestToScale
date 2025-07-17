@@ -37,11 +37,16 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 			cfLog('email.ts',`Skipping database check as SKIP_DB_CHECK is set to true.`);
 		}
 
-		if (result.error) {
+		if (result.message !== 'success' && result.error) {
 			cfLog('email.ts',`❌ ${result.originalFilename}: Error - ${result.error}`);
 			manifest._lastError = result.error;
 			manifest._status = 2;
 			continue;
+		}
+		else if(result.message == 'success' && result.error)
+		{
+			// Log the errors/warnings but still process the manifest. Most likely this is a warning about missing data or dulicate shipments.
+			cfLog('email.ts',`⚠️ ${result.originalFilename}: Warning - ${result.error}`);
 		}
 
 		const responseFiles = convertApiResponseToFiles(result);

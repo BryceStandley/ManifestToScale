@@ -271,23 +271,57 @@ export default {
 };
 
 async function sendToApi(env, attachment: EmailAttachment) : Promise<ApiResponse> {
-	const formData = new FormData();
-	const blob = new Blob([attachment.data], { type: attachment.contentType || 'application/pdf' });
-	formData.append('file', blob, attachment.filename);
-	var endpoint = (env.IS_LOCAL === "true" ? env.DEV_API_ENDPOINT : env.API_ENDPOINT) + (attachment.fileType === 'pdf' ? '/ftg/upload' : '/caf/upload');
-	cfLog('worker.ts',`Sending attachment ${attachment.filename} to API endpoint: ${endpoint}`);
-	const response = await fetch(endpoint, {
+	try
+	{
+		const formData = new FormData();
+		const blob = new Blob([attachment.data], { type: attachment.contentType || 'application/pdf' });
+		formData.append('file', blob, attachment.filename);
+		var endpoint = (env.IS_LOCAL === "true" ? env.DEV_API_ENDPOINT : env.API_ENDPOINT) + (attachment.fileType === 'pdf' ? '/ftg/upload' : '/caf/upload');
+		cfLog('worker.ts',`Sending attachment ${attachment.filename} to API endpoint: ${endpoint}`);
+		/*
+		const response = await fetch(endpoint, {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${env.API_TOKEN}`,
+				// Do not set Content-Type header; fetch will set it automatically for FormData
+			},
+			body: formData as BodyInit, // Type assertion for TypeScript compatibility
+		});*/
+		const response = await fetchApiWithRace(env, endpoint, formData, 30000); // 30 seconds timeout
+		if (!response.ok) {
+			cfLog('worker.ts',`API request failed: ${response.status} ${response.statusText}`);
+			throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+		}
+		return await response.json();
+	}
+	catch (error) {
+		cfLog('worker.ts',`Error sending attachment ${attachment.filename} to API:`, error);
+		return {
+			message: 'failed',
+			error: error.message,
+			originalFilename: attachment.filename,
+		};
+	}
+
+}
+
+async function fetchApiWithRace(env, url: string, formData,  timeoutMs: number = 10000) : Promise<any> {
+	const fetchPromise = fetch(url, {
 		method: 'POST',
 		headers: {
 			Authorization: `Bearer ${env.API_TOKEN}`,
-			// Do not set Content-Type header; fetch will set it automatically for FormData
 		},
-		body: formData as BodyInit, // Type assertion for TypeScript compatibility
+		body: formData as BodyInit,
 	});
-	if (!response.ok) {
-		cfLog('worker.ts',`API request failed: ${response.status} ${response.statusText}`);
+	const timeoutPromise = new Promise((_, reject) =>
+		setTimeout(() => reject(new Error('Request timed out')), timeoutMs)
+	);
+
+	try {
+		return await Promise.race([fetchPromise, timeoutPromise]);
+	} catch (error) {
+		throw error;
 	}
-	return await response.json();
 }
 
 async function sendToDevWorker(env, message)

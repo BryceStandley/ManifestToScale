@@ -4,15 +4,15 @@ using System.Globalization;
 
 public class FreshToGoOrder
 {
-    public DateOnly OrderDate { get; init; } = DateOnly.FromDateTime(DateTime.Today);
-    public string StoreNumber { get; init; } = string.Empty;
-    public string StoreName { get; init; }= string.Empty;
-    public string PoNumber { get; init; } = string.Empty;
-    public string CustomerNumber { get; init; } = string.Empty;
-    public string OrderNumber { get; init;  } = string.Empty;
-    public string InvoiceNumber { get; init; } = string.Empty;
-    public int Quantity { get; init; } = 0;
-    public int CrateQuantity { get; init; } = 0;
+    public DateOnly OrderDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    public string StoreNumber { get; set; } = string.Empty;
+    public string StoreName { get; set; }= string.Empty;
+    public string PoNumber { get; set; } = string.Empty;
+    public string CustomerNumber { get; set; } = string.Empty;
+    public string OrderNumber { get; set;  } = string.Empty;
+    public string InvoiceNumber { get; set; } = string.Empty;
+    public int Quantity { get; set; } = 0;
+    public int CrateQuantity { get; set; } = 0;
     
     public FreshToGoOrder() { }
     
@@ -63,7 +63,7 @@ public class FreshToGoManifest
     
     public ScaleCompany Company { get; init; } = new();
 
-    public List<FreshToGoOrder> Orders { get; } = [];
+    public List<FreshToGoOrder> Orders { get; set; } = [];
 
     private int TotalOrders { get; }
 
@@ -97,4 +97,14 @@ public class FreshToGoManifest
     {
         Orders.Add(order);
     }
+
+    public void UpdateOrderPoNumber(string poNumber, string storeNumber, FreshToGoOrder updatedOrder)
+    {
+        var index = Orders.FindIndex(o => o.PoNumber == poNumber && o.StoreNumber == storeNumber);
+        if (index != -1)
+        {
+            Orders[index] = updatedOrder;
+        }
+    }
+
 }
