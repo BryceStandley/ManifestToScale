@@ -85,6 +85,26 @@ public static class ManifestToScale
         details.Quantity = manifest.GetTotalCrates().ToString();
 
         details.Company = manifest.Company;
+
+        var po = new PurchaseOrder();
+
+        po.CreationDateTime = details.CreationDateTime;
+
+        po.UserDef7 = details.UserDef7;
+
+        po.UserDef8 = details.UserDef8;
+
+        po.PurchaseOrderDate = details.ReceiptDate;
+
+        po.PurchaseOrderId = details.ReceiptId;
+
+        po.Quantity = details.Quantity;
+
+        po.Company = details.Company;
+
+        po.PurchaseOrderPrefix = details.ReceiptPrefix;
+
+        details.PurchaseOrder = po;
         
         return details;
     }
