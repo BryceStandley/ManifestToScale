@@ -10,6 +10,7 @@ public class ScaleCompany
     public string VendorReceiptPrefix { get; } = "FTG/";
     
     public static readonly ScaleCompany AzuraFresh = new("PER-CO-CAF", "856946", "AZURA FRESH WA PTY LTD", "CAF/");
+    public static readonly ScaleCompany ThemeGroup = new("PER-CO-CAF", "222222", "THEME GROUP PTY LTD", "CTG/");
     [UsedImplicitly] public static readonly ScaleCompany FreshToGo = new ("PER-CO-FTG", "853540", "FRESH TO GO FOODS-853540", "FTG/");
 
     public ScaleCompany() { }

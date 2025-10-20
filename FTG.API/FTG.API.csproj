@@ -4,6 +4,9 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>sign.snk</AssemblyOriginatorKeyFile>
+        <PublicSign>true</PublicSign>
     </PropertyGroup>
 
     <ItemGroup>

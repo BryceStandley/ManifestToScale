@@ -124,7 +124,7 @@ public static class ManifestToScale
                 Qty = order.Quantity.ToString(),
                 CrateQty = order.CrateQuantity.ToString(),
                 Company = manifest.Company,
-                OrderType = manifest.Company.Company == ScaleCompany.AzuraFresh ? "CAF" : "FTG"
+                OrderType = manifest.Company.Company == ScaleCompany.AzuraFresh ? "CAF" : "CTG" // FTG is no longer used so its either Azura Fresh or Theme Group
             })
             .ToList();
     }

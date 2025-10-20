@@ -46,6 +46,17 @@ export default {
 				env.SKIP_DB_CHECK = "true";
 			}
 
+			if(parsedEmail.subject.includes("|Vendor=COLES THEME GROUP"))
+			{
+				cfLog('worker.ts', 'Email subject contains Vendor=COLES THEME GROUP, setting manifest supplier to Theme Group');
+				env.MANIFEST_SUPPLIER = "THEME GROUP";
+			}
+			else
+			{
+				cfLog('worker.ts', 'Email subject doesnt contain Vendor=COLES THEME GROUP, setting manifest supplier to Azura Fresh');
+				env.MANIFEST_SUPPLIER = "AZURA";
+			}
+
 			const attachments: EmailAttachment[] = [];
 			if (parsedEmail.attachments.length === 0) {
 				cfLog('worker.ts','No attachments found');
@@ -60,7 +71,7 @@ export default {
 								cfLog('worker.ts',`Found PDF attachment: ${attachment.filename}`);
 								var attachmentData = attachment.content;
 									attachments.push({
-										filename: attachment.filename,
+										filename: attachment.filename + "_" + env.MANIFEST_SUPPLIER,
 										fileType: 'pdf',
 										data: attachmentData,
 										contentType: attachment.mimeType || 'application/pdf',
@@ -70,7 +81,7 @@ export default {
 								cfLog('worker.ts',`Found CSV attachment: ${attachment.filename}`);
 								var attachmentData = attachment.content;
 									attachments.push({
-										filename: attachment.filename,
+										filename: attachment.filename + "_" + env.MANIFEST_SUPPLIER,
 										fileType: 'csv',
 										data: attachmentData,
 										contentType: attachment.mimeType || 'text/csv',
@@ -80,7 +91,7 @@ export default {
 								cfLog('worker.ts',`Found XLSX attachment: ${attachment.filename}`);
 								var attachmentData = attachment.content;
 									attachments.push({
-										filename: attachment.filename,
+										filename: attachment.filename + "_" + env.MANIFEST_SUPPLIER,
 										fileType: 'xlsx',
 										data: attachmentData,
 										contentType: attachment.mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

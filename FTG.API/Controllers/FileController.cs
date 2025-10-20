@@ -149,6 +149,8 @@ public class FileController : ControllerBase
                 GlobalLogger.LogInfo($"File saved: {filePath}");
             }
             
+            GlobalLogger.LogInfo($"Supplier: {file.FileName}");
+            
             // Process the file
             var xmlResults = await Process.ExportCafFiles(_config, _config.GetUploadsPath(), fileName);
             
