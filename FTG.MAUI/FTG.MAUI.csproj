@@ -67,16 +67,16 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommunityToolkit.Maui" Version="12.1.0" />
-        <PackageReference Include="CommunityToolkit.Maui.Core" Version="12.1.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.7" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.7" />
-        <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.81" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.7" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="CommunityToolkit.Maui" Version="12.3.0" />
+        <PackageReference Include="CommunityToolkit.Maui.Core" Version="12.3.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.10" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.10" />
+        <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.120" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.10" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
         <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
         <PackageReference Include="System.Private.Uri" Version="4.3.2" />
     </ItemGroup>
