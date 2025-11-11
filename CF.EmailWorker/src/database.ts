@@ -21,7 +21,8 @@ export async function recordManifestToDatabase(env, manifest: FreshToGoManifestR
 				TotalShipments = EXCLUDED.TotalShipments,
 				ReceiptXml = EXCLUDED.ReceiptXml,
 				ShipmentXml = EXCLUDED.ShipmentXml,
-				Delivered = EXCLUDED.Delivered;`;
+				Delivered = EXCLUDED.Delivered,
+				Vendor = EXCLUDED.Vendor;`;
 
 		const result  = await env.DB.prepare(query).bind(
 			manifest._id,
@@ -36,6 +37,7 @@ export async function recordManifestToDatabase(env, manifest: FreshToGoManifestR
 			manifest._receiptXml,
 			manifest._shipmentXml,
 			manifest._delivered ? 1 : 0,
+			manifest.vendor
 		).all();
 		if (result.success) {
 			cfLog('database.ts',`Manifest ${manifest._id} recorded successfully.`);
@@ -58,17 +60,17 @@ export async function checkIfManifestHasPreviouslyProcessedSuccessfully(env, man
 			throw new Error('Database connection is not available');
 		}
 
-		const query = `SELECT * FROM processed_manifests WHERE ManifestDate = ? AND Status = 1;`; // Status 1 means processed successfully
-		const result  = await env.DB.prepare(query).bind(manifest.ManifestDate).all();
+		const query = `SELECT * FROM processed_manifests WHERE ManifestDate = ? AND Status = 1 AND Vendor = ?;`; // Status 1 means processed successfully
+		const result  = await env.DB.prepare(query).bind(manifest.ManifestDate, manifest.vendor).all();
 
 		if(result.success && result.results.length > 0) {
-			cfLog('database.ts',`Manifest date ${manifest.ManifestDate} has been previously processed successfully.`);
-			return {message: "Manifest date has a processed db record... Skipping", status: 500 }// Manifest has been processed successfully before
+			cfLog('database.ts',`Manifest date ${manifest.ManifestDate} for Vendor ${manifest.vendor} has been previously processed successfully.`);
+			return {message: `Manifest date for Vendor ${manifest.vendor} has a processed db record... Skipping`, status: 500 }// Manifest has been processed successfully before
 		}
 		else
 		{
-			cfLog('database.ts',`Manifest date ${manifest.ManifestDate} has not been processed successfully before.`);
-			return {message: "Manifest date has not been processed db record... Continuing", status: 200 } // Manifest has not been processed successfully before
+			cfLog('database.ts',`Manifest date ${manifest.ManifestDate} for Vendor ${manifest.vendor} has not been processed successfully before.`);
+			return {message: `Manifest date for Vendor ${manifest.vendor} has not been processed db record... Continuing`, status: 200 } // Manifest has not been processed successfully before
 		}
 
 	} catch (error) {
