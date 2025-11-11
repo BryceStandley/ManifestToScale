@@ -51,7 +51,10 @@ public static class Process
     public static async Task<XmlExportResults> ExportCafFiles(IConfig config, string filePath, string fileName)
     {
         var inputFile = Path.Combine(filePath, fileName);
-        var finalFile = Path.Join(config.GetFinishedPath(), Path.GetFileNameWithoutExtension(fileName));
+        var jobId = Path.GetFileNameWithoutExtension(fileName);
+        var jobPath = Path.Join(config.GetFinishedPath(), jobId);
+        Directory.CreateDirectory(jobPath);
+        var finalFile = Path.Join(jobPath, Path.GetFileNameWithoutExtension(fileName));
 
         var manifest = await AzuraFreshCsv.ConvertToManifest(inputFile);
 
@@ -75,8 +78,8 @@ public static class Process
         var receiptXmlPath = finalFile + ".rcxml";
         ManifestToScale.GenerateReceiptFromTemplate(manifest, receiptXmlPath);
 
-        var shipmentXmlPath = finalFile + ".shxml";
-        ManifestToScale.GenerateShipmentFromTemplate(manifest, shipmentXmlPath);
+        var shipmentXmlPath = finalFile;
+        ManifestToScale.GenerateShipmentFromTemplate(manifest, jobPath);
         
         var reordered = manifest.GetManifestDate().ToString("yyyy-dd-MM");
         var result = DateOnly.ParseExact(reordered, "yyyy-dd-MM");
@@ -85,7 +88,7 @@ public static class Process
         var xml = new XmlExportResults
         {
             ReceiptXml = receiptXmlPath,
-            ShipmentXml = shipmentXmlPath,
+            ShipmentXml = jobPath,
             ManifestDate = result,
             ValidationResult = valid,
             Manifest = valid.Manifest ?? manifest
@@ -110,7 +113,7 @@ public static class Process
         var orderNumbers = new HashSet<string>();
         foreach (var order in manifest.GetOrders().Where(order => !orderNumbers.Add(order.OrderNumber)))
         {
-            GlobalLogger.LogWarning($"Duplicate order found: {order.OrderNumber} - {order.StoreName} - Appending A to the end to avoid conflict");
+            GlobalLogger.LogWarning($"Duplicate order found: {order.OrderNumber} - {order.StoreName} - Appending store number to the end to avoid conflict");
             var po = order.OrderNumber;
             order.OrderNumber += "-" + order.StoreNumber; // Append -StoreNumber to the end of the order number to avoid conflict
             order.PoNumber += "-" + order.StoreNumber; // Append -StoreNumber to the end of the PO number as well
@@ -118,7 +121,7 @@ public static class Process
             return new ValidationResult
             {
                 IsValid = true,
-                ErrorMessage = $"Duplicate order found: {order.OrderNumber} - {order.StoreName} - Appending A to the end to avoid conflict",
+                ErrorMessage = $"Duplicate order found: {order.OrderNumber} - {order.StoreName} - Appending store number to the end to avoid conflict",
                 Manifest = manifest
             };
         }

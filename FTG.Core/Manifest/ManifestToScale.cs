@@ -1,3 +1,4 @@
+using System.Xml.Linq;
 using FTG.Core.Logging;
 
 namespace FTG.Core.Manifest;
@@ -53,8 +54,21 @@ public static class ManifestToScale
         try
         {
             var shipmentFile = new ShipmentFile(GenerateShipmentDetails(manifest));
-            shipmentFile.GetShipmentXml().Save(outputFile);
-            GlobalLogger.LogInfo("Shipments generated successfully: " + outputFile);
+            //shipmentFile.GetShipmentXml().Save(outputFile);
+            XNamespace Namespace = "http://www.manh.com/ILSNET/Interface";
+            var shipmentFiles = shipmentFile.GetShipmentsXml();
+            foreach (var shipment in shipmentFiles)
+            {
+                if (shipment.Root != null)
+                {
+                    var id = shipment.Element(Namespace + "Shipments")?
+                        .Element(Namespace + "Shipment")?
+                        .Element(Namespace + "ShipmentId")?.Value;
+                    var shipmentFileName = Path.Join(outputFile, $"{id}.shxml");
+                    shipment.Save(shipmentFileName);
+                    GlobalLogger.LogInfo("Shipment generated successfully: " + shipmentFileName);
+                }
+            }
             return true;
         }
         catch (Exception e)

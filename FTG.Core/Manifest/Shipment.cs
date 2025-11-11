@@ -3,6 +3,12 @@ using JetBrains.Annotations;
 
 namespace FTG.Core.Manifest;
 
+public class GeneratedShipment
+{
+    public string ShipmentId { get; init; } = string.Empty;
+    public string ShipmentXml { get; init; } = string.Empty;
+}
+
 public class ShipmentFile(List<Shipment> shipments)
 {
     private List<Shipment> Shipments { get; } = shipments;
@@ -13,7 +19,18 @@ public class ShipmentFile(List<Shipment> shipments)
         ShipmentXml = ShipmentXmlBuilder.BuildShipmentXml(Shipments);
         return ShipmentXml;
     }
-
+    
+    public List<XDocument> GetShipmentsXml()
+    {
+        var docs = new List<XDocument>();
+        foreach (var shipment in Shipments)
+        {
+            docs.Add(ShipmentXmlBuilder.BuildShipmentXml(shipment));
+        }
+        
+        return docs;
+    }
+    
     private static class ShipmentXmlBuilder
     {
         private static readonly XNamespace Namespace = "http://www.manh.com/ILSNET/Interface";

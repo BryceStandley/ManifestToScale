@@ -1,3 +1,5 @@
+using FTG.Core.Manifest;
+
 namespace FTG.API.Controllers;
 
 using Config;
@@ -139,7 +141,9 @@ public class FileController : ControllerBase
             }
 
             // Generate unique filename to avoid conflicts
-            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var job = Guid.NewGuid();
+            var fileName = $"{job}{Path.GetExtension(file.FileName)}";
+            
             var filePath = Path.Combine(_config.GetUploadsPath(), fileName);
 
             // Save file to disk
@@ -169,10 +173,23 @@ public class FileController : ControllerBase
                 receiptXmlContent = await reader.ReadToEndAsync();
             }
             
-            using (var reader = new StreamReader(xmlResults.ShipmentXml))
+            //Get all the files in the shipment directory
+            var shipmentXml = new List<GeneratedShipment>();
+            var shipmentFiles = Directory.GetFiles(xmlResults.ShipmentXml + "\\", "*.shxml");
+            
+            foreach (var shipmentFile in shipmentFiles)
             {
-                shipmentXmlContent = await reader.ReadToEndAsync();
+                using var reader = new StreamReader(shipmentFile);
+                var xml = await reader.ReadToEndAsync();
+                var shipmentId = Path.GetFileNameWithoutExtension(shipmentFile);
+                shipmentXml.Add(new GeneratedShipment
+                {
+                    ShipmentId = shipmentId,
+                    ShipmentXml = xml
+                });
             }
+            
+            
             
             // Perform file cleanup if enabled
             var shouldCleanup = _aspConfiguration.GetValue<bool>("FileCleanup:Enabled");
@@ -187,7 +204,7 @@ public class FileController : ControllerBase
                     company = xmlResults.Manifest.Company.Company,
                     manifest = xmlResults.Manifest,
                     receiptXmlContent = xmlResults.ValidationResult.IsValid ? receiptXmlContent : string.Empty,
-                    shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty
+                    shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXml : new List<GeneratedShipment>()
                 });
             var daysToKeep = _aspConfiguration.GetValue<int>("FileCleanup:DaysToKeep");
             FileCleanup.CleanupFiles(_config.GetUploadsPath(), daysToKeep);
@@ -203,7 +220,7 @@ public class FileController : ControllerBase
                 company = xmlResults.Manifest.Company.Company,
                 manifest = xmlResults.Manifest,
                 receiptXmlContent = xmlResults.ValidationResult.IsValid ? receiptXmlContent : string.Empty,
-                shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty
+                shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXml : new List<GeneratedShipment>()
             });
         }
         catch (Exception ex)
