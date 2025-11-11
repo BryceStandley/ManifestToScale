@@ -261,7 +261,7 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
             GlobalLogger.LogInfo($"Last modified: {fileInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
             GlobalLogger.LogInfo("Reading input file information...");
 
-            FreshToGoManifest? manifest = null;
+            OrderManifest? manifest = null;
             
             if (fileInfo.Extension == ".pdf")
             {
@@ -327,7 +327,8 @@ public partial class FileProcessor :  ContentPage, INotifyPropertyChanged
             }
             else if (fileInfo.Extension == ".csv" || fileInfo.Extension == ".xlsx")
             {
-                manifest = await AzuraFreshCsv.ConvertToManifest(InputFilePath);
+                //TODO: Update this to have a selector for Azura Fresh or Theme Group
+                manifest = await AzuraFreshCsv.ConvertToManifest(InputFilePath, "856946");
                 
                 if (manifest == null)
                 {

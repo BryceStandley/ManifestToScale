@@ -48,12 +48,12 @@ public static class Process
         return xml;
     }
     
-    public static async Task<XmlExportResults> ExportCafFiles(IConfig config, string filePath, string fileName)
+    public static async Task<XmlExportResults> ExportCsvFiles(IConfig config, string filePath, string fileName, string company)
     {
         var inputFile = Path.Combine(filePath, fileName);
         var finalFile = Path.Join(config.GetFinishedPath(), Path.GetFileNameWithoutExtension(fileName));
 
-        var manifest = await AzuraFreshCsv.ConvertToManifest(inputFile);
+        var manifest = await AzuraFreshCsv.ConvertToManifest(inputFile, company);
 
         if (manifest == null) return new XmlExportResults();
             
@@ -94,7 +94,7 @@ public static class Process
         return xml;
     }
     
-    private static ValidationResult ValidateManifest(FreshToGoManifest manifest)
+    private static ValidationResult ValidateManifest(OrderManifest manifest)
     {
         if (manifest.GetTotalCrates() == 0)
         {

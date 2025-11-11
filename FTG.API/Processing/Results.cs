@@ -10,7 +10,7 @@ public static class Results
         public string ShipmentXml { get; init; } = string.Empty;
         public DateOnly? ManifestDate { get; init; } = DateOnly.FromDateTime(DateTime.UtcNow);
         
-        public FreshToGoManifest? Manifest { get; init; } = new();
+        public OrderManifest? Manifest { get; init; } = new();
         public ValidationResult ValidationResult { get; init; }
     }
     
@@ -19,6 +19,6 @@ public static class Results
         public bool IsValid { get; init; }
         public string ErrorMessage { get; init; }
         
-        public FreshToGoManifest? Manifest { get; init; }
+        public OrderManifest? Manifest { get; init; }
     }
 }

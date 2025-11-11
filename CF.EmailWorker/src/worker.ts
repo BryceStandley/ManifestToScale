@@ -46,6 +46,17 @@ export default {
 				env.SKIP_DB_CHECK = "true";
 			}
 
+			if(parsedEmail.subject.includes("Vendor=856946"))
+			{
+				cfLog('worker.ts', 'Email subject contains Vendor 856946 making this manifest from Azura Fresh');
+				env.MANIFEST_VENDOR = "856946";
+			}
+			else if(parsedEmail.subject.includes("Vendor=222222"))
+			{
+				cfLog('worker.ts', 'Email subject contains Vendor 222222 making this manifest from Theme Group');
+				env.MANIFEST_VENDOR = "222222";
+			}
+
 			const attachments: EmailAttachment[] = [];
 			if (parsedEmail.attachments.length === 0) {
 				cfLog('worker.ts','No attachments found');
@@ -100,6 +111,7 @@ export default {
 				try {
 					const apiResponse = await sendToApi(env, attachment);
 					cfLog('worker.ts',`API response for ${attachment.filename}:`, apiResponse.message);
+
 					if (!apiResponse || apiResponse.message !== 'success') {
 						originalFilename = attachment.filename;
 						throw new Error(`API call failed for ${attachment.filename}: ${apiResponse ? apiResponse.error : 'No response'}`);
@@ -276,7 +288,7 @@ async function sendToApi(env, attachment: EmailAttachment) : Promise<ApiResponse
 		const formData = new FormData();
 		const blob = new Blob([attachment.data], { type: attachment.contentType || 'application/pdf' });
 		formData.append('file', blob, attachment.filename);
-		var endpoint = (env.IS_LOCAL === "true" ? env.DEV_API_ENDPOINT : env.API_ENDPOINT) + (attachment.fileType === 'pdf' ? '/ftg/upload' : '/caf/upload');
+		var endpoint = (env.IS_LOCAL === "true" ? env.DEV_API_ENDPOINT : env.API_ENDPOINT) + (attachment.fileType === 'pdf' ? '/ftg/upload' : ( env.MANIFEST_VENDOR === "856946" ? '/caf/upload' : '/ctg/upload'));
 		cfLog('worker.ts',`Sending attachment ${attachment.filename} to API endpoint: ${endpoint}`);
 		/*
 		const response = await fetch(endpoint, {

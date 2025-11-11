@@ -12,10 +12,19 @@ type DotnetOrder = {
 }
 
 type DotnetManifest = {
+	company: DotnetCompany;
 	orders: DotnetOrder[];
 	totalOrders: number;
 	totalCrates: number;
 	manifestDate: string;
+}
+
+type DotnetCompany = {
+	company: string;
+	vendorNumber: string;
+	vendorName: string;
+	vendorReceiptPrefix: string;
+	vendorSkuNumber: string;
 }
 
 type ApiResponse = {

@@ -86,14 +86,15 @@ export class ResponseEmail extends BaseEmail {
             <ul style="list-style-type: none; padding-left: 0;">
 				<li>📄 <strong>Original File:</strong> ${this.originalFilename}</li>
 				<li>📅 <strong>Processed At:</strong> ${Utils.CurrentDateTimeAWSTShort}</li>
+				<li>📦 <strong>Detected Vendor:</strong> ${this.manifest.vendor}</li>
             </ul>
 		</div>
 
 		<div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <h3 style="margin-top: 0;">Attached Files:</h3>
             <ol>
-				<li><strong>${this.manifest.company}_Receipt-${Utils.GetSimpleScaleDateString(this.manifest.ManifestDate)}.rcxml</strong> - Manhattan Scale Receipt RCXML format</li>
-				<li><strong>${this.manifest.company}_Shipments-${Utils.GetSimpleScaleDateString(this.manifest.ManifestDate)}.shxml</strong> - Manhattan Scale Shipment SHXML format</li>
+				<li><strong>${this.manifest.company}_${this.manifest.vendor}_Receipt-${this.manifest.vendor === 'Azura_Fresh' ? 'CAF' : 'CTG'}-${Utils.GetSimpleScaleDateString(this.manifest.ManifestDate)}.rcxml</strong> - Manhattan Scale Receipt RCXML format</li>
+				<li><strong>${this.manifest.company}_${this.manifest.vendor}_Shipments-${this.manifest.vendor === 'Azura_Fresh' ? 'CAF' : 'CTG'}-${Utils.GetSimpleScaleDateString(this.manifest.ManifestDate)}.shxml</strong> - Manhattan Scale Shipment SHXML format</li>
             </ol>
 		</div>
 
@@ -133,14 +134,15 @@ export class AcknowledgementEmail extends BaseEmail {
             <ul style="list-style-type: none; padding-left: 0;">
 				<li>📄 <strong>Original File:</strong> ${this.originalFilename}</li>
 				<li>📅 <strong>Processed At:</strong> ${Utils.CurrentDateTimeAWSTShort}</li>
+				<li>📦 <strong>Detected Vendor:</strong> ${this.manifest.vendor}</li>
 			</ul>
 		</div>
 
 		<div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <h3 style="margin-top: 0;">Files to be Delivered:</h3>
             <ol>
-				<li><strong>${manifest.company}_Receipt-${Utils.GetSimpleScaleDateString(this.manifest.ManifestDate)}.rcxml</strong> - Manhattan Scale Receipt RCXML format</li>
-				<li><strong>${manifest.company}_Shipments-${Utils.GetSimpleScaleDateString(this.manifest.ManifestDate)}.shxml</strong> - Manhattan Scale Shipment SHXML format</li>
+				<li><strong>${this.manifest.company}_${this.manifest.vendor}_Receipt-${this.manifest.vendor === 'Azura_Fresh' ? 'CAF' : 'CTG'}-${Utils.GetSimpleScaleDateString(this.manifest.ManifestDate)}.rcxml</strong> - Manhattan Scale Receipt RCXML format</li>
+				<li><strong>${this.manifest.company}_${this.manifest.vendor}_Shipments-${this.manifest.vendor === 'Azura_Fresh' ? 'CAF' : 'CTG'}-${Utils.GetSimpleScaleDateString(this.manifest.ManifestDate)}.shxml</strong> - Manhattan Scale Shipment SHXML format</li>
             </ol>
 		</div>
 

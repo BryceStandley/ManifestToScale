@@ -68,7 +68,7 @@ public static class PdfProcessor
 
     }
     
-    public static FreshToGoManifest? ConvertPdfToExcel(string inputPath, string outputPath)
+    public static OrderManifest? ConvertPdfToExcel(string inputPath, string outputPath)
     {
         ExcelPackage.License.SetNonCommercialPersonal("Bryce Standley");
         
@@ -87,20 +87,20 @@ public static class PdfProcessor
         var cleanedOutputPath = System.IO.Path.ChangeExtension(outputPath, "_cleaned.txt");
         File.WriteAllText(cleanedOutputPath, cleanedText);
 
-        var manifest = new FreshToGoManifest(CreateOrdersFromText(cleanedText));
+        var manifest = new OrderManifest(CreateOrdersFromText(cleanedText));
 
         CreateExcelFromManifest(manifest, outputPath);
         
         return manifest;
     }
 
-    private static List<FreshToGoOrder> CreateOrdersFromText(string extractedText)
+    private static List<StoreOrder> CreateOrdersFromText(string extractedText)
     {
         // Split the text into lines
         var lines = extractedText.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
         
         // Create a list to hold the orders
-        var orders = (from line in lines where !line.StartsWith("ShipDate StoreNum StoreName PO# Cust# Order# Inv# Qty Crates") select new FreshToGoOrder(line)).ToList();
+        var orders = (from line in lines where !line.StartsWith("ShipDate StoreNum StoreName PO# Cust# Order# Inv# Qty Crates") select new StoreOrder(line)).ToList();
 
 
         return orders.ToList();
@@ -148,7 +148,7 @@ public static class PdfProcessor
         return output;
     }
     
-    private static void CreateExcelFromManifest(FreshToGoManifest manifest, string outputPath)
+    private static void CreateExcelFromManifest(OrderManifest manifest, string outputPath)
     {
         using var package = new ExcelPackage();
         var worksheet = package.Workbook.Worksheets.Add("Manifest Data");

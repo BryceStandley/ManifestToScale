@@ -1,18 +1,19 @@
 import { DateTime } from "luxon";
 export class FreshToGoManifestRecord  {
-  _id: Number | null | undefined =  null;
-  _processedDateTime: string | null | undefined  = null;
-  OriginalFilename: string | null | undefined  = null;
-  _manifestDate: DateTime | string | null | undefined  = null;
-  _totalCrates: Number | null | undefined  = null;
-  _status: Number | null | undefined   = null; // 0 = Not Processed, 1 = Processed, 2 = Error,
-  _lastError: string | null | undefined   = null;
-  _receiptId: string | null | undefined   = null;
-  _totalShipments: Number | null | undefined   = null;
-  _receiptXml: string | null | undefined = null;
-  _shipmentXml: string | null | undefined   = null;
-  _delivered: Boolean | null | undefined  = false;
-  company: string = 'PER-CO-FTG'; // Default company name, can be overridden
+	_id: Number | null | undefined =  null;
+	_processedDateTime: string | null | undefined  = null;
+	OriginalFilename: string | null | undefined  = null;
+	_manifestDate: DateTime | string | null | undefined  = null;
+	_totalCrates: Number | null | undefined  = null;
+	_status: Number | null | undefined   = null; // 0 = Not Processed, 1 = Processed, 2 = Error,
+	_lastError: string | null | undefined   = null;
+	_receiptId: string | null | undefined   = null;
+	_totalShipments: Number | null | undefined   = null;
+	_receiptXml: string | null | undefined = null;
+	_shipmentXml: string | null | undefined   = null;
+	_delivered: Boolean | null | undefined  = false;
+	company: string = 'PER-CO-FTG'; // Default company name, can be overridden
+	vendor: string = 'Azura Fresh';
 
 	constructor(id?: number,  processedDateTime?: string , originalFilename?: string, totalCrates?: Number, status?: Number, lastError?: string, receiptId?: string, totalShipments?: Number, receiptXml?: string, shipmentXml?: string, delivered?: Boolean) {
 		this._id = id || null;

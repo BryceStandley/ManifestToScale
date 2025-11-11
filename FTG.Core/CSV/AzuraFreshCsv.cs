@@ -23,7 +23,7 @@ public static class AzuraFreshCsv
     ///     A FreshToGoManifest object containing the processed orders and metadata, or null if the file is invalid or an
     ///     error occurs during processing.
     /// </returns>
-    public static async Task<FreshToGoManifest?> ConvertToManifest(string filePath)
+    public static async Task<OrderManifest?> ConvertToManifest(string filePath, string company)
     {
         if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
             GlobalLogger.LogError("CSV file not found: " + filePath);
@@ -42,9 +42,9 @@ public static class AzuraFreshCsv
             }
 
             var orders = CreateOrdersFromRecords(records);
-            var manifest = new FreshToGoManifest(orders)
+            var manifest = new OrderManifest(orders)
             {
-                Company = ScaleCompany.AzuraFresh,
+                Company = company == "856946" ? ScaleCompany.AzuraFresh : ScaleCompany.ThemeGroup, // 856946 is Azura Fresh, 222222 is Theme Group
                 ManifestDate = records[0].Date // Assuming the first record's date is the manifest date
             };
             GlobalLogger.LogInfo($"File processed successfully: {filePath}");
@@ -89,12 +89,12 @@ public static class AzuraFreshCsv
     /// Creates a list of FreshToGoOrder objects from a list of AzuraFreshCsvRecord objects.
     /// <param name="records">The list of AzuraFreshCsvRecord objects from which to generate the orders.</param>
     /// <returns>A list of FreshToGoOrder objects constructed from the provided records.</returns>
-    private static List<FreshToGoOrder> CreateOrdersFromRecords(List<AzuraFreshCsvRecord> records)
+    private static List<StoreOrder> CreateOrdersFromRecords(List<AzuraFreshCsvRecord> records)
     {
-        var orders = new List<FreshToGoOrder>();
+        var orders = new List<StoreOrder>();
         foreach (var record in records)
         {
-            var order = new FreshToGoOrder(record.StoreId, record.CustomerName, record.PurchaseOrderNo, record.OrderNumber, record.PurchaseOrderNo != string.Empty
+            var order = new StoreOrder(record.StoreId, record.CustomerName, record.PurchaseOrderNo, record.OrderNumber, record.PurchaseOrderNo != string.Empty
                     ? record.PurchaseOrderNo
                     : record.OrderNumber, // Assuming InvoiceNo is used as OrderNumber
                 record.InvoiceNo != string.Empty
@@ -168,10 +168,14 @@ public static class AzuraFreshCsv
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
             HasHeaderRecord = true,
+            IgnoreBlankLines = true,
             ShouldSkipRecord = args => 
             {
                 // Skip rows before header
                 if (args.Row.Parser.Row <= headerRowIndex)
+                    return true;
+                
+                if (args.Row.Parser.Record == null || args.Row.Parser.Record.All(string.IsNullOrWhiteSpace))
                     return true;
                 
                 // Check if this looks like a total/summary row

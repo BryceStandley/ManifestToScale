@@ -7,7 +7,7 @@ using CsvHelper;
 
 public static class ManifestToScale
 {
-    public static bool ConvertManifestToCsv(FreshToGoManifest manifest, string outputFile)
+    public static bool ConvertManifestToCsv(OrderManifest manifest, string outputFile)
     {
         try
         {
@@ -29,7 +29,7 @@ public static class ManifestToScale
 
     }
 
-    public static bool GenerateReceiptFromTemplate(FreshToGoManifest manifest, string outputFile)
+    public static bool GenerateReceiptFromTemplate(OrderManifest manifest, string outputFile)
     {
         try
         {
@@ -48,7 +48,7 @@ public static class ManifestToScale
         }
     }
     
-    public static bool GenerateShipmentFromTemplate(FreshToGoManifest manifest, string outputFile)
+    public static bool GenerateShipmentFromTemplate(OrderManifest manifest, string outputFile)
     {
         try
         {
@@ -64,7 +64,7 @@ public static class ManifestToScale
         }
     }
 
-    private static Receipt GenerateReceiptDetails(FreshToGoManifest manifest)
+    private static Receipt GenerateReceiptDetails(OrderManifest manifest)
     {
         var details = new Receipt
         {
@@ -110,7 +110,7 @@ public static class ManifestToScale
     }
     
 
-    private static List<Shipment> GenerateShipmentDetails(FreshToGoManifest manifest)
+    private static List<Shipment> GenerateShipmentDetails(OrderManifest manifest)
     {
         return manifest.GetOrders()
             .Select(order => new Shipment

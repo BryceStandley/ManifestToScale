@@ -120,9 +120,9 @@ public class FileController : ControllerBase
     }
 
 
-    // New Endpoint for uploading Coles Azura Fresh CSV files
+    //Endpoint for uploading Coles Azura Fresh CSV files - Used to know if the manifest is Theme group or Azura Fresh
     [HttpPost("caf/upload")]
-    public async Task<IActionResult> UploadCsv(IFormFile? file)
+    public async Task<IActionResult> UploadCafCsv(IFormFile? file)
     {
         try
         {
@@ -149,50 +149,86 @@ public class FileController : ControllerBase
                 GlobalLogger.LogInfo($"File saved: {filePath}");
             }
             
-            // Process the file
-            var xmlResults = await Process.ExportCafFiles(_config, _config.GetUploadsPath(), fileName);
-            
-            GlobalLogger.LogInfo($"Manifest read successfully");
-            GlobalLogger.LogInfo($"   Manifest Date: {xmlResults.Manifest.GetManifestDate()}");
-            GlobalLogger.LogInfo($"   Total Orders: {xmlResults.Manifest.GetTotalOrders()}");
-            GlobalLogger.LogInfo($"   Total Crates: {xmlResults.Manifest.GetTotalCrates()}");
-            
-            
-            
-            // ReSharper disable once RedundantAssignment
-            var receiptXmlContent = string.Empty;
-            // ReSharper disable once RedundantAssignment
-            var shipmentXmlContent = string.Empty;
-            
-            using (var reader = new StreamReader(xmlResults.ReceiptXml))
+            var result = await ProcessUpload(fileName, "856946");
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            GlobalLogger.LogError("Error uploading file", ex);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+  
+    //Endpoint for uploading Coles Theme Group CSV files - Used to know if the manifest is Theme group or Azura Fresh
+    [HttpPost("ctg/upload")]
+    public async Task<IActionResult> UploadCtgCsv(IFormFile? file)
+    {
+        try
+        {
+            if (!_auth.IsAuthenticated(Request) && !_environment.IsDevelopment())
             {
-                receiptXmlContent = await reader.ReadToEndAsync();
+                GlobalLogger.LogWarning("Invalid authentication key");
+                return Unauthorized("Invalid authentication key");
             }
             
-            using (var reader = new StreamReader(xmlResults.ShipmentXml))
+            if (file == null || file.Length == 0)
             {
-                shipmentXmlContent = await reader.ReadToEndAsync();
+                GlobalLogger.LogWarning("No file uploaded");
+                return BadRequest("No file uploaded");
             }
-            
-            // Perform file cleanup if enabled
-            var shouldCleanup = _aspConfiguration.GetValue<bool>("FileCleanup:Enabled");
-            if (!shouldCleanup)
-                return Ok(new
-                {
-                    message = xmlResults.ValidationResult.IsValid ? "success" : "error",
-                    error = xmlResults.ValidationResult.ErrorMessage,
-                    manifestDate = xmlResults.ManifestDate,
-                    totalOrders = xmlResults.Manifest.GetTotalOrders(),
-                    totalCrates = xmlResults.Manifest.GetTotalCrates(),
-                    company = xmlResults.Manifest.Company.Company,
-                    manifest = xmlResults.Manifest,
-                    receiptXmlContent = xmlResults.ValidationResult.IsValid ? receiptXmlContent : string.Empty,
-                    shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty
-                });
-            var daysToKeep = _aspConfiguration.GetValue<int>("FileCleanup:DaysToKeep");
-            FileCleanup.CleanupFiles(_config.GetUploadsPath(), daysToKeep);
-            FileCleanup.CleanupFiles(_config.GetOutputPath(), daysToKeep);
-            GlobalLogger.LogInfo($"Cleanup completed. Files older than {daysToKeep} days removed.");
+
+            // Generate unique filename to avoid conflicts
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(_config.GetUploadsPath(), fileName);
+
+            // Save file to disk
+            await using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+                GlobalLogger.LogInfo($"File saved: {filePath}");
+            }
+
+            var result = await ProcessUpload(fileName, "222222");
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            GlobalLogger.LogError("Error uploading file", ex);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    private async Task<ObjectResult> ProcessUpload(string fileName, string company)
+    {
+        // Process the file
+        var xmlResults = await Process.ExportCsvFiles(_config, _config.GetUploadsPath(), fileName, company);
+        
+        GlobalLogger.LogInfo($"Manifest read successfully");
+        GlobalLogger.LogInfo($"   Manifest Date: {xmlResults.Manifest.GetManifestDate()}");
+        GlobalLogger.LogInfo($"   Total Orders: {xmlResults.Manifest.GetTotalOrders()}");
+        GlobalLogger.LogInfo($"   Total Crates: {xmlResults.Manifest.GetTotalCrates()}");
+        
+        // ReSharper disable once RedundantAssignment
+        var receiptXmlContent = string.Empty;
+        // ReSharper disable once RedundantAssignment
+        var shipmentXmlContent = string.Empty;
+        
+        using (var reader = new StreamReader(xmlResults.ReceiptXml))
+        {
+            receiptXmlContent = await reader.ReadToEndAsync();
+        }
+        
+        using (var reader = new StreamReader(xmlResults.ShipmentXml))
+        {
+            shipmentXmlContent = await reader.ReadToEndAsync();
+        }
+        
+        // Perform file cleanup if enabled
+        var shouldCleanup = _aspConfiguration.GetValue<bool>("FileCleanup:Enabled");
+        if (!shouldCleanup)
+        {
             return Ok(new
             {
                 message = xmlResults.ValidationResult.IsValid ? "success" : "error",
@@ -206,12 +242,24 @@ public class FileController : ControllerBase
                 shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty
             });
         }
-        catch (Exception ex)
+        
+        //Cleaning up files
+        var daysToKeep = _aspConfiguration.GetValue<int>("FileCleanup:DaysToKeep");
+        FileCleanup.CleanupFiles(_config.GetUploadsPath(), daysToKeep);
+        FileCleanup.CleanupFiles(_config.GetOutputPath(), daysToKeep);
+        GlobalLogger.LogInfo($"Cleanup completed. Files older than {daysToKeep} days removed.");
+        
+        return Ok(new
         {
-            GlobalLogger.LogError("Error uploading file", ex);
-            return StatusCode(500, "Internal server error");
-        }
+            message = xmlResults.ValidationResult.IsValid ? "success" : "error",
+            error = xmlResults.ValidationResult.ErrorMessage,
+            manifestDate = xmlResults.ManifestDate,
+            totalOrders = xmlResults.Manifest.GetTotalOrders(),
+            totalCrates = xmlResults.Manifest.GetTotalCrates(),
+            company = xmlResults.Manifest.Company.Company,
+            manifest = xmlResults.Manifest,
+            receiptXmlContent = xmlResults.ValidationResult.IsValid ? receiptXmlContent : string.Empty,
+            shipmentXmlContent = xmlResults.ValidationResult.IsValid ? shipmentXmlContent : string.Empty
+        });
     }
-  
-    
 }

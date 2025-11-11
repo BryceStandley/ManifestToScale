@@ -88,7 +88,7 @@ public class Receipt
                                     // SKU section
                                     new XElement(Namespace + "SKU",
                                         new XElement(Namespace + "Company", data.PurchaseOrder.Company.Company),
-                                        new XElement(Namespace + "Item", "1111"),
+                                        new XElement(Namespace + "Item", data.PurchaseOrder.Company.VendorSkuNumber),
                                         new XElement(Namespace + "Quantity", data.PurchaseOrder.Quantity),
                                         new XElement(Namespace + "QuantityUm", "UN")
                                     )
@@ -109,6 +109,7 @@ public class Receipt
                             new XElement(Namespace + "ReceiptDate", data.ReceiptDate),
                             new XElement(Namespace + "ReceiptId", data.ReceiptId),
                             new XElement(Namespace + "ReceiptIdType", "PO"),
+                            new XElement(Namespace + "TrailerId", "1"), // This allows the receipt to automatically be marked as urgent in SCI
 
                             // Vendor section
                             new XElement(Namespace + "Vendor",
@@ -136,7 +137,7 @@ public class Receipt
                                     new XElement(Namespace + "SKU",
                                         new XElement(Namespace + "Company", data.Company.Company),
                                         new XElement(Namespace + "HarmCode", ""),
-                                        new XElement(Namespace + "Item", "1111"),
+                                        new XElement(Namespace + "Item", data.Company.VendorSkuNumber),
                                         new XElement(Namespace + "Quantity", data.Quantity),
                                         new XElement(Namespace + "QuantityUm", "UN")
                                     )

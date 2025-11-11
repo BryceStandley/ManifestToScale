@@ -83,9 +83,9 @@ public class ShipmentFile(List<Shipment> shipments)
                                 // SKU section
                                 new XElement(Namespace + "SKU",
                                     new XElement(Namespace + "Company", data.Company.Company),
-                                    new XElement(Namespace + "Item", "1111"),
+                                    new XElement(Namespace + "Item", data.Company.VendorSkuNumber),
                                     new XElement(Namespace + "ItemCategories",
-                                        new XElement(Namespace + "Category1", "1111")
+                                        new XElement(Namespace + "Category1", data.Company.VendorSkuNumber)
                                     ),
                                     new XElement(Namespace + "Quantity", data.CrateQty),
                                     new XElement(Namespace + "QuantityUm", "UN")
@@ -147,9 +147,9 @@ public class ShipmentFile(List<Shipment> shipments)
                             // SKU section
                             new XElement(Namespace + "SKU",
                                 new XElement(Namespace + "Company", data.Company.Company),
-                                new XElement(Namespace + "Item", "1111"),
+                                new XElement(Namespace + "Item", data.Company.VendorSkuNumber),
                                 new XElement(Namespace + "ItemCategories",
-                                    new XElement(Namespace + "Category1", "1111")
+                                    new XElement(Namespace + "Category1", data.Company.VendorSkuNumber)
                                 ),
                                 new XElement(Namespace + "Quantity", data.CrateQty),
                                 new XElement(Namespace + "QuantityUm", "UN")

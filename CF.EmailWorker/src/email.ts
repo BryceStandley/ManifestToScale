@@ -19,6 +19,8 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 		manifest.OriginalFilename = originalFile;
 		manifest.ManifestDate = result.manifestDate || null;
 		manifest._processedDateTime = Utils.CurrentDateTimeAWSTShort;
+		manifest.vendor = env.MANIFEST_VENDOR  === '856946' ? 'Azura_Fresh' : 'Theme_Group' ;
+
 		cfLog('email.ts',`Detected Manifest Date: ${manifest.ManifestDate}`);
 
 		cfLog('email.ts',`Checking if manifest ${manifest.OriginalFilename} has been processed successfully before...`);
@@ -61,6 +63,7 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 		manifest._lastError = '';
 		manifest._id = (await env.DB.prepare('SELECT COUNT(*) FROM "processed_manifests"').all()).results[0]['COUNT(*)'] + 1;
 		manifest.company = result.company || 'PER-CO-FTG'; // Default to FTG if not provided
+		manifest.vendor = env.MANIFEST_VENDOR  === '856946' ? 'Azura_Fresh' : 'Theme_Group' ;
 	}
 
 
@@ -222,10 +225,10 @@ async function sendErrorEmailFromMailgun(env, toAddress, message, originalFilena
 function convertApiResponseToFiles(apiResponse: ApiResponse): EmailAttachment[] {
 	const attachments: EmailAttachment[] = [];
 	const manifestDate = apiResponse.manifestDate;
-	const company = apiResponse.company === 'PER-CO-FTG' ? 'FTG' : 'CAF';
+	const company = apiResponse.company === 'PER-CO-FTG' ? 'FTG' : (apiResponse.manifest.company.vendorNumber === '856946' ? 'CAF' : 'CTG');
 	const receiptId = 'Receipt-' + company + '-' + Utils.GetSimpleScaleDateString(manifestDate);
 	const shipmentId = 'Shipments-' + company + '-' + Utils.GetSimpleScaleDateString(manifestDate);
-	const baseName = 'PER-CO-' + company + '_';
+	const baseName = 'PER-CO-' + company + '_' + (apiResponse.manifest.company.vendorNumber === '856946' ? 'Azura_Fresh' : 'Theme_Group') + '_';
 	if (apiResponse.receiptXmlContent) {
 		//const receiptBase64 = btoa(apiResponse.receiptXmlContent);
 		attachments.push({

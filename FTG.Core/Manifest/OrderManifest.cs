@@ -2,7 +2,7 @@ namespace FTG.Core.Manifest;
 
 using System.Globalization;
 
-public class FreshToGoOrder
+public class StoreOrder
 {
     public DateOnly OrderDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
     public string StoreNumber { get; set; } = string.Empty;
@@ -14,9 +14,9 @@ public class FreshToGoOrder
     public int Quantity { get; set; } = 0;
     public int CrateQuantity { get; set; } = 0;
     
-    public FreshToGoOrder() { }
+    public StoreOrder() { }
     
-    public FreshToGoOrder(string storeNumber, string storeName, string poNumber, string customerNumber, string orderNumber, string invoiceNumber, int quantity, int crateQuantity)
+    public StoreOrder(string storeNumber, string storeName, string poNumber, string customerNumber, string orderNumber, string invoiceNumber, int quantity, int crateQuantity)
     {
         StoreNumber = storeNumber;
         StoreName = storeName;
@@ -28,7 +28,7 @@ public class FreshToGoOrder
         CrateQuantity = crateQuantity;
     }
     
-    public FreshToGoOrder(string orderLineFromPdf)
+    public StoreOrder(string orderLineFromPdf)
     {
         // Example of an order line from PDF:
         //   ShipDate StoreNum StoreName PO# Cust# Order# Inv# Qty Crates
@@ -52,9 +52,9 @@ public class FreshToGoOrder
     }
 }
 
-public class FreshToGoManifest
+public class OrderManifest
 {
-    public List<FreshToGoOrder> GetOrders() => Orders;
+    public List<StoreOrder> GetOrders() => Orders;
     public int GetTotalOrders() => TotalOrders;
     public int GetTotalCrates() => _mTotalCrates;
     public DateOnly GetManifestDate() => _mManifestDate;
@@ -63,7 +63,7 @@ public class FreshToGoManifest
     
     public ScaleCompany Company { get; init; } = new();
 
-    public List<FreshToGoOrder> Orders { get; set; } = [];
+    public List<StoreOrder> Orders { get; set; } = [];
 
     private int TotalOrders { get; }
 
@@ -80,9 +80,9 @@ public class FreshToGoManifest
     
     
     
-    public FreshToGoManifest() { }
+    public OrderManifest() { }
     
-    public FreshToGoManifest(List<FreshToGoOrder> orders)
+    public OrderManifest(List<StoreOrder> orders)
     {
         Orders = orders;
         TotalOrders = orders.Count;
@@ -93,12 +93,12 @@ public class FreshToGoManifest
         }
     }
     
-    public void AddOrder(FreshToGoOrder order)
+    public void AddOrder(StoreOrder order)
     {
         Orders.Add(order);
     }
 
-    public void UpdateOrderPoNumber(string poNumber, string storeNumber, FreshToGoOrder updatedOrder)
+    public void UpdateOrderPoNumber(string poNumber, string storeNumber, StoreOrder updatedOrder)
     {
         var index = Orders.FindIndex(o => o.PoNumber == poNumber && o.StoreNumber == storeNumber);
         if (index != -1)
