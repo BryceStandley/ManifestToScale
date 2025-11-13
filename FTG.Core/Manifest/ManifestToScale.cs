@@ -119,7 +119,7 @@ public static class ManifestToScale
                 StoreNumber = order.StoreNumber.Length < 4 ? order.StoreNumber.PadLeft(4, '0') : order.StoreNumber,
                 OrderDate = manifest.GetManifestDate().ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture),
                 PoNumber = order.PoNumber,
-                OrderNumber = order.OrderNumber,
+                OrderNumber = manifest.Company == ScaleCompany.AzuraFresh ? "CAF-" + order.OrderNumber : "CTG-" + order.OrderNumber, // Add CAF to Azura Shipments and CTG to ThemeGroup Shipments
                 CustomerNumber = order.CustomerNumber,
                 Qty = order.Quantity.ToString(),
                 CrateQty = order.CrateQuantity.ToString(),
