@@ -27,11 +27,18 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 		if(env.SKIP_DB_CHECK === "false") {
 			const previouslyProcessed = await checkIfManifestHasPreviouslyProcessedSuccessfully(env, manifest);
 			if (previouslyProcessed.status == 500) {
-				cfLog('email.ts', `Manifest ${manifest.OriginalFilename} with date ${manifest.ManifestDate} has been processed previously.`);
-				return {
-					message: 'Manifest date was previously recorded as processed successfully... New files wont be sent',
-					status: 500
-				};
+				cfLog('email.ts', `Manifest ${manifest.OriginalFilename} with date ${manifest.ManifestDate} has been processed previously with total crates: ${previouslyProcessed.totalCrates} and total orders: ${previouslyProcessed.totalShipments}.`);
+				if(previouslyProcessed.totalCrates !== manifest._totalCrates || previouslyProcessed.totalShipments !== manifest._totalShipments)
+				{
+					cfLog('email.ts', `Manifest was previously processed successfully but the total crates or total orders have changed. Sending new files...`);
+				}
+				else
+				{
+					return {
+						message: 'Manifest date was previously recorded as processed successfully... New files wont be sent',
+						status: 500
+					};
+				}
 			}
 		}
 		else
@@ -51,13 +58,16 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 			cfLog('email.ts',`⚠️ ${result.originalFilename}: Warning - ${result.error}`);
 		}
 
+		const company = result.company === 'PER-CO-FTG' ? 'FTG' : (result.manifest.company.vendorNumber === '856946' ? 'CAF' : 'CTG');
+		const receiptId = 'Receipt-' + company + '-' + Utils.GetSimpleScaleDateString(manifest.ManifestDate);
+
 		const responseFiles = convertApiResponseToFiles(result);
 		attachments.push(...responseFiles);
 		manifest._receiptXml = result.receiptXmlContent || '';
 		manifest._shipmentXml = result.shipmentXmlContent || '';
 		manifest._totalShipments = result.totalOrders || 0;
 		manifest._totalCrates = result.totalCrates || 0;
-		manifest._receiptId = 'Receipt-FTG-' + Utils.GetSimpleScaleDateString(manifest.ManifestDate);
+		manifest._receiptId = receiptId;
 		manifest._status = 1;
 		manifest._delivered = false;
 		manifest._lastError = '';

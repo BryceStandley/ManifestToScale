@@ -8,8 +8,8 @@ export async function recordManifestToDatabase(env, manifest: FreshToGoManifestR
 			throw new Error('Database connection is not available');
 		}
 
-		const query = `INSERT INTO processed_manifests (Id, ProcessedDateTime, OriginalFilename, ManifestDate, TotalCrates, Status, LastError, ReceiptId, TotalShipments, ReceiptXml, ShipmentXml, Delivered)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		const query = `INSERT INTO processed_manifests (Id, ProcessedDateTime, OriginalFilename, ManifestDate, TotalCrates, Status, LastError, ReceiptId, TotalShipments, ReceiptXml, ShipmentXml, Delivered, Vendor)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT (Id) DO UPDATE
 			SET ProcessedDateTime = EXCLUDED.ProcessedDateTime,
 				OriginalFilename = EXCLUDED.OriginalFilename,
@@ -65,16 +65,16 @@ export async function checkIfManifestHasPreviouslyProcessedSuccessfully(env, man
 
 		if(result.success && result.results.length > 0) {
 			cfLog('database.ts',`Manifest date ${manifest.ManifestDate} for Vendor ${manifest.vendor} has been previously processed successfully.`);
-			return {message: `Manifest date for Vendor ${manifest.vendor} has a processed db record... Skipping`, status: 500 }// Manifest has been processed successfully before
+			return {message: `Manifest date for Vendor ${manifest.vendor} has a processed db record... Skipping`, status: 500, totalCrates: result.results.totalCrates, totalShipments: result.results.totalShipments}// Manifest has been processed successfully before
 		}
 		else
 		{
 			cfLog('database.ts',`Manifest date ${manifest.ManifestDate} for Vendor ${manifest.vendor} has not been processed successfully before.`);
-			return {message: `Manifest date for Vendor ${manifest.vendor} has not been processed db record... Continuing`, status: 200 } // Manifest has not been processed successfully before
+			return {message: `Manifest date for Vendor ${manifest.vendor} has not been processed db record... Continuing`, status: 200, totalCrates: 0, totalShipments: 0 } // Manifest has not been processed successfully before
 		}
 
 	} catch (error) {
 		cfLog('database.ts','Error querying the database for manifest date:', error);
-		return {message: `Error querying the database for manifest date: ${error.message}`, status: 500};
+		return {message: `Error querying the database for manifest date: ${error.message}`, status: 500, totalCrates: 0, totalShipments: 0};
 	}
 }
