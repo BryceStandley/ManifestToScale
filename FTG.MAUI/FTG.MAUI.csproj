@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <AppVersion>2.0.3</AppVersion>
-        <AppVersionCode>2.0.3</AppVersionCode>
+        <AppVersion>2.0.4</AppVersion>
+        <AppVersionCode>2.0.4</AppVersionCode>
     </PropertyGroup>
     
     <PropertyGroup>

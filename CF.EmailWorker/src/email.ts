@@ -5,6 +5,7 @@ import { AcknowledgementEmail, EmailAttachment, ResponseEmail, ErrorEmail} from 
 import { Utils } from './utils';
 import { recordManifestToDatabase, checkIfManifestHasPreviouslyProcessedSuccessfully } from './database';
 import type { ApiResponse, EmailProcessingResponse } from './types';
+import { Guid } from "ez-guid";
 
 
 async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promise<EmailProcessingResponse> {
@@ -15,10 +16,24 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 	for (const result of apiResponses) {
 		cfLog('email.ts','Processing result for', result.originalFilename);
 
+		const company = result.company === 'PER-CO-FTG' ? 'FTG' : (result.manifest.company.vendorNumber === '856946' ? 'CAF' : 'CTG');
+
+		const responseFiles = convertApiResponseToFiles(result);
 		originalFile = result.originalFilename || 'ftgmanifest.pdf';
 		manifest.OriginalFilename = originalFile;
 		manifest.ManifestDate = result.manifestDate || null;
 		manifest._processedDateTime = Utils.CurrentDateTimeAWSTShort;
+		manifest._receiptXml = result.receiptXmlContent || '';
+		manifest._shipmentXml = result.shipmentXmlContent || '';
+		manifest._totalShipments = result.totalOrders || 0;
+		manifest._totalCrates = result.totalCrates || 0;
+		const receiptId = 'Receipt-' + company + '-' + Utils.GetSimpleScaleDateString(manifest.ManifestDate);
+		manifest._receiptId = receiptId;
+		manifest._status = 1;
+		manifest._delivered = false;
+		manifest._lastError = '';
+		manifest._id = (await env.DB.prepare('SELECT COUNT(*) FROM "processed_manifests"').all()).results[0]['COUNT(*)'] + 1;
+		manifest.company = result.company || 'PER-CO-FTG'; // Default to FTG if not provided
 		manifest.vendor = env.MANIFEST_VENDOR  === '856946' ? 'Azura_Fresh' : 'Theme_Group' ;
 
 		cfLog('email.ts',`Detected Manifest Date: ${manifest.ManifestDate}`);
@@ -58,22 +73,10 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 			cfLog('email.ts',`⚠️ ${result.originalFilename}: Warning - ${result.error}`);
 		}
 
-		const company = result.company === 'PER-CO-FTG' ? 'FTG' : (result.manifest.company.vendorNumber === '856946' ? 'CAF' : 'CTG');
-		const receiptId = 'Receipt-' + company + '-' + Utils.GetSimpleScaleDateString(manifest.ManifestDate);
 
-		const responseFiles = convertApiResponseToFiles(result);
+
 		attachments.push(...responseFiles);
-		manifest._receiptXml = result.receiptXmlContent || '';
-		manifest._shipmentXml = result.shipmentXmlContent || '';
-		manifest._totalShipments = result.totalOrders || 0;
-		manifest._totalCrates = result.totalCrates || 0;
-		manifest._receiptId = receiptId;
-		manifest._status = 1;
-		manifest._delivered = false;
-		manifest._lastError = '';
-		manifest._id = (await env.DB.prepare('SELECT COUNT(*) FROM "processed_manifests"').all()).results[0]['COUNT(*)'] + 1;
-		manifest.company = result.company || 'PER-CO-FTG'; // Default to FTG if not provided
-		manifest.vendor = env.MANIFEST_VENDOR  === '856946' ? 'Azura_Fresh' : 'Theme_Group' ;
+
 	}
 
 
@@ -127,7 +130,7 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 
 		if(delayed)
 		{
-			var res2 = await sendAcknowledgementEmail(env, toAddress, originalFile, manifest.ManifestDate, manifest.company);
+			var res2 = await sendAcknowledgementEmail(env, toAddress, originalFile, manifest.ManifestDate, manifest.company, manifest.vendor);
 			if (!res2 || res2.status !== 200 || res.message !== 'Email sent successfully') {
 				cfLog('email.ts','Error sending acknowledgement email:', res2);
 				return { message:'Failed to send acknowledgement email', status: 500 };
@@ -163,12 +166,13 @@ async function sendEmailFromMailgun(env, emailForm, emailType = 'response') {
 	}
 }
 
-async function sendAcknowledgementEmail(env, toAddress, originalFile, manifestDate, company) {
+async function sendAcknowledgementEmail(env, toAddress, originalFile, manifestDate, company, vendor) {
 	var acknowledgementEmails = env.ACKNOWLEDGEMENT_EMAILS?.toLowerCase().split(',') || [];
 	var manifest = new FreshToGoManifestRecord();
 	manifest.OriginalFilename = originalFile;
 	manifest.ManifestDate = manifestDate;
 	manifest.company = company;
+	manifest.vendor = vendor;
 	var email =  new AcknowledgementEmail();
 	if(toAddress === 'bryce@vectorpixel.net')
 	{

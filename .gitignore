@@ -23,3 +23,6 @@ riderModule.iml
 /CF.EmailWorker/node_modules/
 /CF.EmailWorker/.idea/
 /CF.EmailWorker/.dev.vars
+CF.EmailWorker/d1.sql
+
+*.sql

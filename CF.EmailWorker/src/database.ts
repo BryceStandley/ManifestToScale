@@ -1,5 +1,6 @@
 import type { FreshToGoManifestRecord } from './freshToGo';
 import { cfLog } from './deepConsoleLog';
+import { Guid } from "ez-guid";
 
 export async function recordManifestToDatabase(env, manifest: FreshToGoManifestRecord) {
 	try {
@@ -8,8 +9,8 @@ export async function recordManifestToDatabase(env, manifest: FreshToGoManifestR
 			throw new Error('Database connection is not available');
 		}
 
-		const query = `INSERT INTO processed_manifests (Id, ProcessedDateTime, OriginalFilename, ManifestDate, TotalCrates, Status, LastError, ReceiptId, TotalShipments, ReceiptXml, ShipmentXml, Delivered, Vendor)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		const query = `INSERT INTO processed_manifests (Id, ProcessedDateTime, OriginalFilename, ManifestDate, TotalCrates, Status, LastError, ReceiptId, TotalShipments, ReceiptXml, ShipmentXml, Delivered, Vendor, Guid)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT (Id) DO UPDATE
 			SET ProcessedDateTime = EXCLUDED.ProcessedDateTime,
 				OriginalFilename = EXCLUDED.OriginalFilename,
@@ -22,7 +23,10 @@ export async function recordManifestToDatabase(env, manifest: FreshToGoManifestR
 				ReceiptXml = EXCLUDED.ReceiptXml,
 				ShipmentXml = EXCLUDED.ShipmentXml,
 				Delivered = EXCLUDED.Delivered,
-				Vendor = EXCLUDED.Vendor;`;
+				Vendor = EXCLUDED.Vendor,
+				Guid = EXCLUDED.Guid;`;
+
+		const guid = Guid.create().toShortString();
 
 		const result  = await env.DB.prepare(query).bind(
 			manifest._id,
@@ -37,14 +41,15 @@ export async function recordManifestToDatabase(env, manifest: FreshToGoManifestR
 			manifest._receiptXml,
 			manifest._shipmentXml,
 			manifest._delivered ? 1 : 0,
-			manifest.vendor
+			manifest.vendor,
+			guid
 		).all();
 		if (result.success) {
-			cfLog('database.ts',`Manifest ${manifest._id} recorded successfully.`);
-			return {message: `Manifest ${manifest._id} recorded successfully.`, status: 200};
+			cfLog('database.ts',`Manifest ${guid} recorded successfully.`);
+			return {message: `Manifest ${guid} recorded successfully.`, status: 200};
 		} else {
-			cfLog('database.ts',`Failed to record manifest ${manifest._id}`, result);
-			return {message: `Failed to record manifest ${manifest._id}: ${result}`, status: 500};
+			cfLog('database.ts',`Failed to record manifest ${guid}`, result);
+			return {message: `Failed to record manifest ${guid}: ${result}`, status: 500};
 		}
 
 	} catch (error) {
@@ -65,7 +70,7 @@ export async function checkIfManifestHasPreviouslyProcessedSuccessfully(env, man
 
 		if(result.success && result.results.length > 0) {
 			cfLog('database.ts',`Manifest date ${manifest.ManifestDate} for Vendor ${manifest.vendor} has been previously processed successfully.`);
-			return {message: `Manifest date for Vendor ${manifest.vendor} has a processed db record... Skipping`, status: 500, totalCrates: result.results.totalCrates, totalShipments: result.results.totalShipments}// Manifest has been processed successfully before
+			return {message: `Manifest date for Vendor ${manifest.vendor} has a processed db record... Skipping`, status: 500, totalCrates: manifest._totalCrates, totalShipments: manifest._totalShipments}// Manifest has been processed successfully before
 		}
 		else
 		{
