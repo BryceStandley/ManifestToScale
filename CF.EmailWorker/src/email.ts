@@ -1,15 +1,15 @@
 import FormData from 'form-data';
 import { cfLog } from './deepConsoleLog';
 import { FreshToGoManifestRecord } from './freshToGo';
-import { AcknowledgementEmail, EmailAttachment, ResponseEmail, ErrorEmail} from './emailTemplates';
+import { AcknowledgementEmail, ResponseEmail, ErrorEmail} from './emailTemplates';
 import { Utils } from './utils';
 import { recordManifestToDatabase, checkIfManifestHasPreviouslyProcessedSuccessfully } from './database';
-import type { ApiResponse, EmailProcessingResponse } from './types';
+import type { ApiResponse, EmailProcessingResponse, Attachment } from './types';
 import { Guid } from "ez-guid";
 
 
 async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promise<EmailProcessingResponse> {
-	const attachments: EmailAttachment[] = [];
+	const attachments: Attachment[] = [];
 	var originalFile = '';
 	var manifest: FreshToGoManifestRecord = new FreshToGoManifestRecord();
 
@@ -23,8 +23,8 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 		manifest.OriginalFilename = originalFile;
 		manifest.ManifestDate = result.manifestDate || null;
 		manifest._processedDateTime = Utils.CurrentDateTimeAWSTShort;
-		manifest._receiptXml = result.receiptXmlContent || '';
-		manifest._shipmentXml = result.shipmentXmlContent || '';
+		manifest._receiptXml = result.xmlContent.receiptContent || '';
+		manifest._shipmentXml = result.xmlContent.shipmentContent || '';
 		manifest._totalShipments = result.totalOrders || 0;
 		manifest._totalCrates = result.totalCrates || 0;
 		const receiptId = 'Receipt-' + company + '-' + Utils.GetSimpleScaleDateString(manifest.ManifestDate);
@@ -32,14 +32,17 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 		manifest._status = 1;
 		manifest._delivered = false;
 		manifest._lastError = '';
-		manifest._id = (await env.DB.prepare('SELECT COUNT(*) FROM "processed_manifests"').all()).results[0]['COUNT(*)'] + 1;
+		manifest._id = 0; // Default to 0 for new record
 		manifest.company = result.company || 'PER-CO-FTG'; // Default to FTG if not provided
 		manifest.vendor = env.MANIFEST_VENDOR  === '856946' ? 'Azura_Fresh' : 'Theme_Group' ;
+
+		manifest.processingMessages = result.correctionMessages || null;
 
 		cfLog('email.ts',`Detected Manifest Date: ${manifest.ManifestDate}`);
 
 		cfLog('email.ts',`Checking if manifest ${manifest.OriginalFilename} has been processed successfully before...`);
 		if(env.SKIP_DB_CHECK === "false") {
+			manifest._id = (await env.DB.prepare('SELECT COUNT(*) FROM "processed_manifests"').all()).results[0]['COUNT(*)'] + 1; // generate new ID based on count of existing records only if not skipping DB check
 			const previouslyProcessed = await checkIfManifestHasPreviouslyProcessedSuccessfully(env, manifest);
 			if (previouslyProcessed.status == 500) {
 				cfLog('email.ts', `Manifest ${manifest.OriginalFilename} with date ${manifest.ManifestDate} has been processed previously with total crates: ${previouslyProcessed.totalCrates} and total orders: ${previouslyProcessed.totalShipments}.`);
@@ -67,22 +70,42 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 			manifest._status = 2;
 			continue;
 		}
-		else if(result.message == 'success' && result.error)
+		
+		if(result.message == 'success')
 		{
-			// Log the errors/warnings but still process the manifest. Most likely this is a warning about missing data or dulicate shipments.
-			cfLog('email.ts',`⚠️ ${result.originalFilename}: Warning - ${result.error}`);
+			// Log any errors/warnings but still process the manifest.
+			if(result.error)
+			{
+				cfLog('email.ts',`⚠️ ${result.originalFilename}: Warning - ${result.error}`);
+			}
+			if(manifest.processingMessages?.warnings.length > 0 || manifest.processingMessages?.errors.length > 0)
+			{
+				cfLog('email.ts',`⚠️ ${result.originalFilename}: Processing Messages detected - see below logs for details.`);
+				for(const warnMsg of manifest.processingMessages?.warnings || [])
+				{
+					cfLog('email.ts',`⚠️ Warning Message: ${warnMsg}`);
+				}
+				for(const errMsg of manifest.processingMessages?.errors || [])
+				{
+					cfLog('email.ts',`❌ Error Message: ${errMsg}`);
+				}
+			}
+			
 		}
-
-
 
 		attachments.push(...responseFiles);
 
 	}
 
-
-	// Save the manifest to the database
-	const dbRes = await recordManifestToDatabase(env, manifest);
-	cfLog('email.ts','Database record result:', dbRes);
+	if(env.SKIP_DB_CHECK === "false") {
+		// Save the manifest to the database
+		const dbRes = await recordManifestToDatabase(env, manifest);
+		cfLog('email.ts','Database record result:', dbRes);
+	}
+	else
+	{
+		cfLog('email.ts',`Skipping recording manifest to database as SKIP_DB_CHECK is set to true.`);
+	}
 
 	var email = new ResponseEmail();
 	if(toAddress === 'bryce@vectorpixel.net')
@@ -128,9 +151,9 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 
 		cfLog('email.ts','Email sent successfully:', res);
 
-		if(delayed)
+		if(delayed || env.FORCE_SEND_ACK === "true")
 		{
-			var res2 = await sendAcknowledgementEmail(env, toAddress, originalFile, manifest.ManifestDate, manifest.company, manifest.vendor);
+			var res2 = await sendAcknowledgementEmail(env, toAddress, originalFile, manifest);
 			if (!res2 || res2.status !== 200 || res.message !== 'Email sent successfully') {
 				cfLog('email.ts','Error sending acknowledgement email:', res2);
 				return { message:'Failed to send acknowledgement email', status: 500 };
@@ -166,13 +189,8 @@ async function sendEmailFromMailgun(env, emailForm, emailType = 'response') {
 	}
 }
 
-async function sendAcknowledgementEmail(env, toAddress, originalFile, manifestDate, company, vendor) {
+async function sendAcknowledgementEmail(env, toAddress, originalFile, manifest) {
 	var acknowledgementEmails = env.ACKNOWLEDGEMENT_EMAILS?.toLowerCase().split(',') || [];
-	var manifest = new FreshToGoManifestRecord();
-	manifest.OriginalFilename = originalFile;
-	manifest.ManifestDate = manifestDate;
-	manifest.company = company;
-	manifest.vendor = vendor;
 	var email =  new AcknowledgementEmail();
 	if(toAddress === 'bryce@vectorpixel.net')
 	{
@@ -236,26 +254,26 @@ async function sendErrorEmailFromMailgun(env, toAddress, message, originalFilena
 	}
 }
 
-function convertApiResponseToFiles(apiResponse: ApiResponse): EmailAttachment[] {
-	const attachments: EmailAttachment[] = [];
+function convertApiResponseToFiles(apiResponse: ApiResponse): Attachment[] {
+	const attachments: Attachment[] = [];
 	const manifestDate = apiResponse.manifestDate;
 	const company = apiResponse.company === 'PER-CO-FTG' ? 'FTG' : (apiResponse.manifest.company.vendorNumber === '856946' ? 'CAF' : 'CTG');
 	const receiptId = 'Receipt-' + company + '-' + Utils.GetSimpleScaleDateString(manifestDate);
 	const shipmentId = 'Shipments-' + company + '-' + Utils.GetSimpleScaleDateString(manifestDate);
 	const baseName = 'PER-CO-' + company + '_' + (apiResponse.manifest.company.vendorNumber === '856946' ? 'Azura_Fresh' : 'Theme_Group') + '_';
-	if (apiResponse.receiptXmlContent) {
+	if (apiResponse.xmlContent?.receiptContent) {
 		//const receiptBase64 = btoa(apiResponse.receiptXmlContent);
 		attachments.push({
-			content: apiResponse.receiptXmlContent,
+			content: apiResponse.xmlContent.receiptContent,
 			filename: `${baseName}${receiptId}.rcxml`,
 			type: 'application/xml',
 			disposition: 'attachment',
 		});
 	}
-	if (apiResponse.shipmentXmlContent) {
+	if (apiResponse.xmlContent?.shipmentContent) {
 		//const shipmentBase64 = btoa(apiResponse.shipmentXmlContent);
 		attachments.push({
-			content: apiResponse.shipmentXmlContent,
+			content: apiResponse.xmlContent.shipmentContent,
 			filename: `${baseName}${shipmentId}.shxml`,
 			type: 'application/xml',
 			disposition: 'attachment',

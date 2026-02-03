@@ -1,4 +1,6 @@
 import { DateTime } from "luxon";
+import { ProcessingMessages } from "./types";
+
 export class FreshToGoManifestRecord  {
 	_id: Number | null | undefined =  null;
 	_processedDateTime: string | null | undefined  = null;
@@ -14,6 +16,7 @@ export class FreshToGoManifestRecord  {
 	_delivered: Boolean | null | undefined  = false;
 	company: string = 'PER-CO-FTG'; // Default company name, can be overridden
 	vendor: string = 'Azura Fresh';
+	processingMessages?: ProcessingMessages;
 
 	constructor(id?: number,  processedDateTime?: string , originalFilename?: string, totalCrates?: Number, status?: Number, lastError?: string, receiptId?: string, totalShipments?: Number, receiptXml?: string, shipmentXml?: string, delivered?: Boolean) {
 		this._id = id || null;

@@ -12,11 +12,12 @@ type DotnetOrder = {
 }
 
 type DotnetManifest = {
-	company: DotnetCompany;
 	orders: DotnetOrder[];
 	totalOrders: number;
 	totalCrates: number;
 	manifestDate: string;
+	company: DotnetCompany;
+	processingMessages?: string;
 }
 
 type DotnetCompany = {
@@ -36,9 +37,23 @@ type ApiResponse = {
 	totalCrates?: number;
 	company?: string;
 	manifest?: DotnetManifest;
-	receiptXmlContent?: string;
-	shipmentXmlContent?: string;
+	xmlContent?: XmlContent;
+	storeCorrections?: StoreCorrection[];
+	correctionMessages?: ProcessingMessages;
 };
+
+type XmlContent = {
+	receiptContent: string;
+	shipmentContent: string;
+}
+type StoreCorrection = {
+	orderNumber: string;
+	storeName: string;
+	originalStoreNumber: string;
+	correctedStoreNumber: string;
+	confidence: number;
+	message?: string;
+}
 
 type EmailAttachment = {
 	filename: string;
@@ -52,4 +67,16 @@ type EmailProcessingResponse = {
 	status: number;
 }
 
-export { DotnetOrder, DotnetManifest, ApiResponse, EmailAttachment, EmailProcessingResponse };
+type ProcessingMessages = {
+	warnings: string[];
+	errors: string[];
+}
+
+type Attachment = {
+	filename: string;
+	type: string | null;
+	content: ArrayBuffer | string; // Use ArrayBuffer for binary data
+	disposition: string; // e.g., 'attachment', 'inline'
+};
+
+export { DotnetOrder, DotnetManifest, ApiResponse, EmailAttachment, EmailProcessingResponse, ProcessingMessages, Attachment };

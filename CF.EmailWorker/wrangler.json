@@ -3,30 +3,54 @@
 	"name": "ftg-email-worker",
 	"main": "src/worker.ts",
 	"workers_dev": true,
-	"compatibility_date": "2025-05-29",
+	"compatibility_date": "2025-05-23",
 	"compatibility_flags": [
     "nodejs_compat"
 	],
 	"vars": {
-    "FROM_EMAIL": "noreply@ftg.vectorpixel.net",
-	"API_ENDPOINT": "https://cf.ftgapi.vectorpixel.net/api/files",
-	"ALLOWED_SENDERS": "bryce@vectorpixel.net,jandakot.inbound@costagroup.com.au,ned.cecic@costagroup.com.au,darren.sutcliffe@costagroup.com.au,cassandra.sansiveri@costagroup.com.au",
-	"ACKNOWLEDGEMENT_EMAILS": "ned.cecic@costagroup.com.au,darren.sutcliffe@costagroup.com.au,cassandra.sansiveri@costagroup.com.au",
-	"IS_LOCAL": "false",
-	"SKIP_DB_CHECK": "false",
-	"SKIP_EMAIL_SEND": "false",
-	"MANIFEST_VENDOR": "unknown"
+		"FROM_EMAIL": "noreply@ftg.vectorpixel.net",
+		"API_ENDPOINT": "https://m2s.ftgapi.vectorpixel.net/api/files",
+		"ALLOWED_SENDERS": "bryce@vectorpixel.net,jandakot.inbound@costagroup.com.au,ned.cecic@costagroup.com.au,darren.sutcliffe@costagroup.com.au,cassandra.sansiveri@costagroup.com.au",
+		"ACKNOWLEDGEMENT_EMAILS": "ned.cecic@costagroup.com.au,darren.sutcliffe@costagroup.com.au,cassandra.sansiveri@costagroup.com.au",
+		"IS_LOCAL": "false",
+		"SKIP_DB_CHECK": "false",
+		"SKIP_EMAIL_SEND": "false",
+		"MANIFEST_VENDOR": "unknown",
+		"FORCE_SEND_ACK": "false"
 	},
 	"observability": {
 		"enabled": true
 	},
 	"logpush": true,
 	"d1_databases": [
-    {
-		"binding": "DB",
-		"database_name": "ftg_manifests",
-		"database_id": "835295be-cf31-41fa-893b-9810212e913c"
-    }
-  ]
+		{
+			"binding": "DB",
+			"database_name": "ftg_manifests",
+			"database_id": "835295be-cf31-41fa-893b-9810212e913c"
+		}
+	],
+	"env" : {
+		"development" : {
+			"vars" : {
+				"IS_LOCAL": "true",
+				"SKIP_DB_CHECK": "false",
+				"SKIP_EMAIL_SEND": "false",
+				"API_ENDPOINT": "http://127.0.0.1:8787/api/files",
+				"DEV_API_ENDPOINT" : "http://127.0.0.1:8787/api/files",
+				"FROM_EMAIL": "noreply@ftg.vectorpixel.net",
+				"ALLOWED_SENDERS": "bryce@vectorpixel.net,jandakot.inbound@costagroup.com.au,ned.cecic@costagroup.com.au,darren.sutcliffe@costagroup.com.au,cassandra.sansiveri@costagroup.com.au",
+				"ACKNOWLEDGEMENT_EMAILS": "",
+				"MANIFEST_VENDOR": "unknown",
+				"FORCE_SEND_ACK": "false"
+			},
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "ftg_manifests",
+					"database_id": "835295be-cf31-41fa-893b-9810212e913c"
+				}
+			],
+		}
+	}
 
 }

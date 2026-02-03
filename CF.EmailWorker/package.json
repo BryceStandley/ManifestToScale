@@ -4,9 +4,10 @@
 	"private": true,
 	"scripts": {
 		"deploy": "wrangler deploy",
-		"dev": "wrangler dev",
-		"start": "wrangler dev",
-		"gentypes": "npx wrangler types"
+		"dev": "wrangler dev --port 8788 --env development",
+		"start": "wrangler dev --port 8788 --env development",
+		"gentypes": "npx wrangler types",
+		"devclean" : "wrangler dev --port 8788"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20250618.0",

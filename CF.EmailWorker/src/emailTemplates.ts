@@ -2,13 +2,7 @@ import { from } from "form-data";
 import { FreshToGoManifestRecord } from "./freshToGo";
 import { DateTime } from "luxon";
 import { Utils }  from "./utils";
-
-export type EmailAttachment = {
-	filename: string;
-	type: string | null;
-	content: ArrayBuffer | string; // Use ArrayBuffer for binary data
-	disposition: string; // e.g., 'attachment', 'inline'
-};
+import { ProcessingMessages, Attachment } from "./types";
 
 class BaseEmail {
 	from: string = 'Fresh To Go - Scale XML Processor for Receipts and Shipments <noreply@ftg.vectorpixel.net>';
@@ -16,10 +10,11 @@ class BaseEmail {
 	subject: string | null;
 	text: string  | null;
 	html: string | null;
-	_attachments: EmailAttachment[] | null = null;
+	_attachments: Attachment[] | null = null;
 
 	originalFilename: string = 'ftgmanifest.pdf';
 	manifest: FreshToGoManifestRecord | null;
+	processingMessages?: ProcessingMessages;
 
 	constructor()
 	{
@@ -30,12 +25,12 @@ class BaseEmail {
 		this.manifest = null;
 	}
 
-	get attachments(): EmailAttachment[] | null
+	get attachments(): Attachment[] | null
 	{
 		return this.attachments;
 	}
 
-	set attachments(attachments: EmailAttachment[])
+	set attachments(attachments: Attachment[])
 	{
 		if (attachments.length > 0)
 		{
@@ -56,6 +51,50 @@ class BaseEmail {
 		this._attachments.push({ filename, type: contentType, content: data, disposition: disposition });
 
 	}
+
+	getProcessingMessagesFromManifest(): ProcessingMessages | null
+	{
+		if (this.manifest)
+		{
+			return this.manifest.processingMessages || null;
+		}
+		return null;
+	}
+
+	createProcessingMessagesSummary(): string
+	{
+		const messages = this.getProcessingMessagesFromManifest();
+		if (messages)
+		{
+			let warningsSummary = '';
+			let errorsSummary = '';
+			for(const warn of messages.warnings)
+			{
+				warningsSummary += `<li>${warn.replace(/⚠/g, "⚠️")}</li>`;
+			}
+			for(const err of messages.errors)
+			{
+				errorsSummary += `<li>${err.replace(/✗/g, "❌")}</li>`;
+			}
+
+			const summary = `
+				<div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+					<h3 style="margin-top: 0;">Processing Errors/Warnings:</h3>
+					<h4 style="margin-top: 0;">⚠️ Warnings:</h4>
+					<ul style="list-style-type: none; padding-left: 0;">
+						${warningsSummary}
+					</ul>
+					<h4 style="margin-top: 0;">❌ Errors:</h4>
+					<ul style="list-style-type: none; padding-left: 0;">
+						${errorsSummary}
+					</ul>
+				</div>
+			`;
+			return (warningsSummary || errorsSummary) ? summary : '';
+		}
+
+		return '';
+	}
 }
 
 export class ResponseEmail extends BaseEmail {
@@ -75,7 +114,7 @@ export class ResponseEmail extends BaseEmail {
 
 		this.html =
 		`
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto;">
 		<h2 style="color: #28a745;">Manifest Processing Complete! ✅</h2>
 
 		<p>The provided Manifest has been successfully processed and converted into the required formats for Scale Interfacing.</p>
@@ -89,6 +128,8 @@ export class ResponseEmail extends BaseEmail {
 				<li>📦 <strong>Detected Vendor:</strong> ${this.manifest.vendor}</li>
             </ul>
 		</div>
+
+		${this.createProcessingMessagesSummary()}
 
 		<div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <h3 style="margin-top: 0;">Attached Files:</h3>
@@ -118,7 +159,7 @@ export class AcknowledgementEmail extends BaseEmail {
 
 		this.subject = `Acknowledgement of Manifest For Scale - ${this.originalFilename} - Received @ ${Utils.CurrentDateTimeAWSTShort}`;
 		this.html = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto;">
 		<h2 style="color: #28a745;">Manifest Processing Acknowledgement! ✅</h2>
 
 		<p>The provided Manifest has been successfully received and processed into the required formats for Scale Interfacing.</p>
@@ -137,6 +178,8 @@ export class AcknowledgementEmail extends BaseEmail {
 				<li>📦 <strong>Detected Vendor:</strong> ${this.manifest.vendor}</li>
 			</ul>
 		</div>
+
+		${this.createProcessingMessagesSummary()}
 
 		<div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <h3 style="margin-top: 0;">Files to be Delivered:</h3>
@@ -166,21 +209,25 @@ export class ErrorEmail extends BaseEmail {
 
   this.subject = `Error Processing Manifest For Scale - ${this.originalFilename} - Error @ ${Utils.CurrentDateTimeAWSTShort}`;
   this.html = `
-	<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+	<div style="font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto;">
 	<h2 style="color: #dc3545;">Error Processing Manifest! ❌</h2>
 
 	<p>There was an error processing the provided Manifest.</p>
-	<p><strong>Error:</strong> ${errorMessage}</p>
-	<h3 style="margin-top: 0;">Original File:</h3>
-	<p>${this.originalFilename}</p>
 
 	<div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-			<h3 style="margin-top: 0;">Processing Details:</h3>
-			<ul style="list-style-type: none; padding-left: 0;">
-	<li>📄 <strong>Original File:</strong> ${this.originalFilename}</li>
-	<li>📅 <strong>Processed At:</strong> ${Utils.CurrentDateTimeAWSTShort}</li>
-	</ul>
+		<h3 style="margin-top: 0;">Error Details:</h3>
+		<p>${errorMessage}</p>
 	</div>
+
+	<div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+		<h3 style="margin-top: 0;">Processing Details:</h3>
+		<ul style="list-style-type: none; padding-left: 0;">
+			<li>📄 <strong>Original File:</strong> ${this.originalFilename}</li>
+			<li>📅 <strong>Processed At:</strong> ${Utils.CurrentDateTimeAWSTShort}</li>
+		</ul>
+	</div>
+
+	${this.createProcessingMessagesSummary()}
 
 		</div>
 	`;

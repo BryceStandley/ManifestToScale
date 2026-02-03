@@ -46,12 +46,12 @@ export default {
 				env.SKIP_DB_CHECK = "true";
 			}
 
-			if(parsedEmail.subject.includes("Vendor=856946"))
+			if(parsedEmail.subject.includes("856946"))
 			{
 				cfLog('worker.ts', 'Email subject contains Vendor 856946 making this manifest from Azura Fresh');
 				env.MANIFEST_VENDOR = "856946";
 			}
-			else if(parsedEmail.subject.includes("Vendor=222222"))
+			else if(parsedEmail.subject.includes("222222"))
 			{
 				cfLog('worker.ts', 'Email subject contains Vendor 222222 making this manifest from Theme Group');
 				env.MANIFEST_VENDOR = "222222";
@@ -142,7 +142,7 @@ export default {
 		} catch (error) {
 			cfLog('worker.ts','Error processing email:', error);
 			if (message.from) {
-				await sendErrorEmailFromMailgun(env, message.from,  `Error processing your email: ${error.message}`, originalFilename);
+				await sendErrorEmailFromMailgun(env, message.from,  error.message, originalFilename);
 			}
 		}
 	},
