@@ -3,6 +3,7 @@ import { FreshToGoManifestRecord } from "./freshToGo";
 import { DateTime } from "luxon";
 import { Utils }  from "./utils";
 import { ProcessingMessages, Attachment } from "./types";
+import { cfLog } from "./deepConsoleLog";
 
 class BaseEmail {
 	from: string = 'Fresh To Go - Scale XML Processor for Receipts and Shipments <noreply@ftg.vectorpixel.net>';
@@ -64,7 +65,8 @@ class BaseEmail {
 	createProcessingMessagesSummary(): string
 	{
 		const messages = this.getProcessingMessagesFromManifest();
-		if (messages)
+
+		if (messages.errors !== undefined && messages.warnings !== undefined)
 		{
 			let warningsSummary = '';
 			let errorsSummary = '';

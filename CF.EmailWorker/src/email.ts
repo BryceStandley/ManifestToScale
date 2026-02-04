@@ -78,16 +78,20 @@ async function sendResponseEmailFromMailgun(env, toAddress, apiResponses): Promi
 			{
 				cfLog('email.ts',`⚠️ ${result.originalFilename}: Warning - ${result.error}`);
 			}
-			if(manifest.processingMessages?.warnings.length > 0 || manifest.processingMessages?.errors.length > 0)
+
+			if(manifest.processingMessages?.warnings !== undefined && manifest.processingMessages?.errors !== undefined)
 			{
-				cfLog('email.ts',`⚠️ ${result.originalFilename}: Processing Messages detected - see below logs for details.`);
-				for(const warnMsg of manifest.processingMessages?.warnings || [])
+				if(manifest.processingMessages?.warnings.length > 0 || manifest.processingMessages?.errors.length > 0)
 				{
-					cfLog('email.ts',`⚠️ Warning Message: ${warnMsg}`);
-				}
-				for(const errMsg of manifest.processingMessages?.errors || [])
-				{
-					cfLog('email.ts',`❌ Error Message: ${errMsg}`);
+					cfLog('email.ts',`⚠️ ${result.originalFilename}: Processing Messages detected - see below logs for details.`);
+					for(const warnMsg of manifest.processingMessages?.warnings || [])
+					{
+						cfLog('email.ts',`⚠️ Warning Message: ${warnMsg}`);
+					}
+					for(const errMsg of manifest.processingMessages?.errors || [])
+					{
+						cfLog('email.ts',`❌ Error Message: ${errMsg}`);
+					}
 				}
 			}
 			
