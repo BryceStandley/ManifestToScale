@@ -68,8 +68,8 @@ type EmailProcessingResponse = {
 }
 
 type ProcessingMessages = {
-	warnings: string[];
-	errors: string[];
+	warnings: string[] | null;
+	errors: string[] | null;
 }
 
 type Attachment = {

@@ -66,19 +66,29 @@ class BaseEmail {
 	{
 		const messages = this.getProcessingMessagesFromManifest();
 
-		if (messages.errors !== undefined && messages.warnings !== undefined)
+		if (messages !== null)
 		{
+			cfLog('emailTemplates.ts', 'Processing messages found', messages);
 			let warningsSummary = '';
 			let errorsSummary = '';
-			for(const warn of messages.warnings)
+
+			if(messages.warnings !== null && messages.warnings !== undefined)
 			{
-				warningsSummary += `<li>${warn.replace(/⚠/g, "⚠️")}</li>`;
-			}
-			for(const err of messages.errors)
-			{
-				errorsSummary += `<li>${err.replace(/✗/g, "❌")}</li>`;
+				cfLog('emailTemplates.ts', `${messages.warnings.length} warning message/s found`);
+				for(const warn of messages.warnings)
+				{
+					warningsSummary += `<li>${warn.replace(/⚠/g, "⚠️")}</li>`;
+				}
 			}
 
+			if(messages.errors !== null && messages.errors !== undefined)
+			{
+				cfLog('emailTemplates.ts', `${messages.errors.length} error message/s found`);
+				for(const err of messages.errors)
+				{
+					errorsSummary += `<li>${err.replace(/✗/g, "❌")}</li>`;
+				}
+			}
 			const summary = `
 				<div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
 					<h3 style="margin-top: 0;">Processing Errors/Warnings:</h3>
