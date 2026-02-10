@@ -86,6 +86,7 @@ class BaseEmail {
 					<ul style="list-style-type: none; padding-left: 0;">
 						${warningsSummary}
 					</ul>
+					<hr />
 					<h4 style="margin-top: 0;">❌ Errors:</h4>
 					<ul style="list-style-type: none; padding-left: 0;">
 						${errorsSummary}
@@ -159,7 +160,7 @@ export class AcknowledgementEmail extends BaseEmail {
 		this.originalFilename = originalFilename;
 		this.manifest = manifest;
 
-		this.subject = `Acknowledgement of Manifest For Scale - ${this.originalFilename} - Received @ ${Utils.CurrentDateTimeAWSTShort}`;
+		this.subject = `Acknowledgement of Manifest For Scale - ${this.originalFilename} - ${this.manifest.processingMessages !== undefined ? 'With Issues Detected' : 'No Issues Detected'}`;
 		this.html = `
         <div style="font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto;">
 		<h2 style="color: #28a745;">Manifest Processing Acknowledgement! ✅</h2>
