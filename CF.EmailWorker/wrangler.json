@@ -34,7 +34,7 @@
 			"vars" : {
 				"IS_LOCAL": "true",
 				"SKIP_DB_CHECK": "true",
-				"SKIP_EMAIL_SEND": "true",
+				"SKIP_EMAIL_SEND": "false",
 				"API_ENDPOINT": "http://127.0.0.1:8787/api/files",
 				"DEV_API_ENDPOINT" : "http://127.0.0.1:8787/api/files",
 				"FROM_EMAIL": "noreply@ftg.vectorpixel.net",

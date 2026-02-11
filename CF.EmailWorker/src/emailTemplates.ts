@@ -66,41 +66,46 @@ class BaseEmail {
 	{
 		const messages = this.getProcessingMessagesFromManifest();
 
-		if (messages !== null)
+		if (messages !== null && messages !== undefined && ((messages.warnings !== null && messages.warnings !== undefined && messages.warnings.length > 0) ||
+			(messages.errors !== null && messages.errors !== undefined && messages.errors.length > 0)))
 		{
 			cfLog('emailTemplates.ts', 'Processing messages found', messages);
 			let warningsSummary = '';
 			let errorsSummary = '';
 
-			if(messages.warnings !== null && messages.warnings !== undefined)
+			if(messages.warnings !== null && messages.warnings !== undefined && messages.warnings.length > 0)
 			{
 				cfLog('emailTemplates.ts', `${messages.warnings.length} warning message/s found`);
+				warningsSummary += `
+				<h4 style="margin-top: 0;">⚠️ Warnings:</h4>
+					<ul style="list-style-type: none; padding-left: 0;">`;
 				for(const warn of messages.warnings)
 				{
 					warningsSummary += `<li>${warn.replace(/⚠/g, "⚠️")}</li>`;
 				}
+				warningsSummary += `</ul>`;
 			}
 
-			if(messages.errors !== null && messages.errors !== undefined)
+			if(messages.errors !== null && messages.errors !== undefined && messages.errors.length > 0)
 			{
 				cfLog('emailTemplates.ts', `${messages.errors.length} error message/s found`);
+				(messages.warnings !== null && messages.warnings !== undefined && messages.warnings.length > 0) ? errorsSummary += `<hr />` : '';
+				errorsSummary += `
+					<h4 style="margin-top: 0;">❌ Errors:</h4>
+					<ul style="list-style-type: none; padding-left: 0;">`;
+
 				for(const err of messages.errors)
 				{
 					errorsSummary += `<li>${err.replace(/✗/g, "❌")}</li>`;
 				}
+				errorsSummary += `</ul>`;
 			}
 			const summary = `
 				<div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
 					<h3 style="margin-top: 0;">Processing Errors/Warnings:</h3>
-					<h4 style="margin-top: 0;">⚠️ Warnings:</h4>
-					<ul style="list-style-type: none; padding-left: 0;">
+				
 						${warningsSummary}
-					</ul>
-					<hr />
-					<h4 style="margin-top: 0;">❌ Errors:</h4>
-					<ul style="list-style-type: none; padding-left: 0;">
 						${errorsSummary}
-					</ul>
 				</div>
 			`;
 			return (warningsSummary || errorsSummary) ? summary : '';
@@ -169,8 +174,17 @@ export class AcknowledgementEmail extends BaseEmail {
 		this.to = [this.to, ...to].flat();
 		this.originalFilename = originalFilename;
 		this.manifest = manifest;
-
-		this.subject = `Acknowledgement of Manifest For Scale - ${this.originalFilename} - ${this.manifest.processingMessages !== undefined ? 'With Issues Detected' : 'No Issues Detected'}`;
+		var hasIssues = false;
+		if(this.manifest.processingMessages !== undefined && this.manifest.processingMessages !== null)
+		{
+			if((this.manifest.processingMessages.warnings !== undefined && this.manifest.processingMessages.warnings !== null && this.manifest.processingMessages.warnings.length > 0) ||
+			   (this.manifest.processingMessages.errors !== undefined && this.manifest.processingMessages.errors !== null && this.manifest.processingMessages.errors.length > 0))
+			{
+				hasIssues = true;
+			}
+		}
+		cfLog('emailTemplates.ts', `Acknowledgement email initialized with hasIssues = ${hasIssues}`);
+		this.subject = `Acknowledgement of Manifest For Scale - ${this.originalFilename} - ${hasIssues ? 'With Issues Detected' : 'No Issues Detected'}`;
 		this.html = `
         <div style="font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto;">
 		<h2 style="color: #28a745;">Manifest Processing Acknowledgement! ✅</h2>
