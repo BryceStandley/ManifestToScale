@@ -46,9 +46,9 @@ export default {
 				env.SKIP_DB_CHECK = "true";
 			}
 
-			if(parsedEmail.subject.includes("856946"))
+			if(parsedEmail.subject.includes("856946") || parsedEmail.attachments.some(att => att.filename && att.filename.toLowerCase().includes('azura')))
 			{
-				cfLog('worker.ts', 'Email subject contains Vendor 856946 making this manifest from Azura Fresh');
+				cfLog('worker.ts', 'Email subject contains Vendor 856946 or attachment filename contains "azura", making this manifest from Azura Fresh');
 				env.MANIFEST_VENDOR = "856946";
 			}
 			else if(parsedEmail.subject.includes("222222"))
